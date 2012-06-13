@@ -1,4 +1,4 @@
-﻿namespace NPatterns.Messaging
+﻿namespace NPatterns.Messaging.IoC
 {
     public interface IHandler<in T>
     {
