@@ -15,7 +15,7 @@ namespace NPatterns.Messaging
 
         #region IMessageBus Members
 
-        public virtual IDisposable Subscribe<T>(Action<T> callback)
+        public virtual IDisposable Subscribe<T>(Action<T> callback) where T : class
         {
             int key = callback.GetHashCode();
             _callbacks.TryAdd(key, callback);
@@ -27,7 +27,7 @@ namespace NPatterns.Messaging
             });
         }
 
-        public virtual void Publish<T>(T message)
+        public virtual void Publish<T>(T message) where T : class
         {
             var callbacks = (from action in _callbacks.Values
                              let typedAction = action as Action<T>

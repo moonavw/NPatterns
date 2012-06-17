@@ -6,7 +6,7 @@ using Microsoft.Practices.ServiceLocation;
 
 namespace NPatterns.Messaging.IoC
 {
-    public class MessageBusEx : MessageBus
+    public class MessageBusEx : MessageBus, IMessageBus
     {
         public override void Publish<T>(T message)
         {
