@@ -16,7 +16,7 @@ namespace NPatterns.ObjectRelational
         public List<Criteria> Criterias { get; set; }
 
         [DataMember(Name = "groupop")]
-        public CriteriaLogicalOperator LogicalOperator { get; set; }
+        public CriteriaGroupOperator Operator { get; set; }
 
         public bool Valid
         {
@@ -30,7 +30,7 @@ namespace NPatterns.ObjectRelational
                         select new Criteria
                                    {
                                        Field = rule.Field.Remove(0, prefix.Length),
-                                       Data = rule.Data,
+                                       Value = rule.Value,
                                        Operator = rule.Operator
                                    };
 

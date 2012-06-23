@@ -11,20 +11,17 @@ namespace NPatterns.ObjectRelational
     /// using System.Linq.Dynamic;
     /// .Where(aQueryObject.Predicate,aQueryObject.Values);
     /// </summary>
-    public class QueryObject
+    public class QueryObject<T> where T : class
     {
-        private readonly List<object> _values = new List<object>();
-        private readonly StringBuilder _predicate = new StringBuilder();
-        private readonly IEnumerable<PropertyInfo> _properties;
+        private readonly List<object> _values;
+        private readonly StringBuilder _predicate;
+        private readonly PropertyInfo[] _properties;
 
-        public QueryObject(Type elementType)
-            : this(elementType.GetProperties())
+        public QueryObject()
         {
-        }
-
-        public QueryObject(IEnumerable<PropertyInfo> elementProperties)
-        {
-            _properties = elementProperties;
+            _properties = typeof(T).GetProperties();
+            _predicate = new StringBuilder();
+            _values = new List<object>();
         }
 
         public string Predicate
@@ -37,43 +34,51 @@ namespace NPatterns.ObjectRelational
             get { return _values.ToArray(); }
         }
 
-        public void Add(CriteriaLogicalOperator logicalOperator, Criteria criteria)
+        public void Add(CriteriaGroupOperator op, Criteria criteria)
         {
-            Build(_predicate, logicalOperator, criteria);
+            Build(_predicate, op, criteria);
         }
 
-        public void Add(CriteriaLogicalOperator logicalOperator, CriteriaGroup criteriaGroup)
+        public void Add(CriteriaGroupOperator op, CriteriaGroup criteriaGroup)
         {
-            Build(_predicate, logicalOperator, criteriaGroup);
+            Build(_predicate, op, criteriaGroup);
         }
 
-        private void Build(StringBuilder builder, CriteriaLogicalOperator logicalOperator, CriteriaGroup criteriaGroup)
+        #region predicate builder
+        private void Build(StringBuilder builder, CriteriaGroupOperator op, CriteriaGroup criteriaGroup)
         {
             var sb = new StringBuilder();
             foreach (var criteria in criteriaGroup.Criterias)
-                Build(sb, criteriaGroup.LogicalOperator, criteria);
+                Build(sb, criteriaGroup.Operator, criteria);
 
             if (sb.Length == 0)
                 return;
 
             if (builder.Length > 0)
-                builder.Append(logicalOperator);
+                builder.AppendFormat(" {0} ", op);
 
             builder.AppendFormat("({0})", sb);
         }
 
-        private void Build(StringBuilder builder, CriteriaLogicalOperator logicalOperator, Criteria criteria)
+        private void Build(StringBuilder builder, CriteriaGroupOperator op, Criteria criteria)
         {
             var property = _properties.FirstOrDefault(z => z.Name == criteria.Field);
             if (property == null)
                 return;
 
+            int valueIndex = _values.Count;
             if (criteria.Operator != CriteriaOperator.IsContainedIn &&
                 criteria.Operator != CriteriaOperator.IsNotContainedIn)
             {
-                criteria.Value = ConvertEx.ChangeType(criteria.Value, property.PropertyType);
                 if (builder.Length > 0)
-                    builder.Append(logicalOperator);
+                    builder.AppendFormat(" {0} ", op);
+
+                if (criteria.Operator != CriteriaOperator.IsNull &&
+                    criteria.Operator != CriteriaOperator.IsNotNull)
+                {
+                    criteria.Value = ConvertEx.ChangeType(criteria.Value, property.PropertyType);
+                    _values.Add(criteria.Value);
+                }
             }
 
             switch (criteria.Operator)
@@ -86,9 +91,9 @@ namespace NPatterns.ObjectRelational
                             select
                                 new Criteria { Field = criteria.Field, Operator = CriteriaOperator.IsEqualTo, Value = z.Trim() };
 
-                        var group = new CriteriaGroup { LogicalOperator = CriteriaLogicalOperator.Or, Criterias = q.ToList() };
+                        var group = new CriteriaGroup { Operator = CriteriaGroupOperator.Or, Criterias = q.ToList() };
 
-                        Build(builder, logicalOperator, group);
+                        Build(builder, op, group);
                     }
                     break;
                 case CriteriaOperator.IsNotContainedIn:
@@ -99,66 +104,131 @@ namespace NPatterns.ObjectRelational
                             select
                                 new Criteria { Field = criteria.Field, Operator = CriteriaOperator.IsNotEqualTo, Value = z.Trim() };
 
-                        var group = new CriteriaGroup { LogicalOperator = CriteriaLogicalOperator.And, Criterias = q.ToList() };
+                        var group = new CriteriaGroup { Operator = CriteriaGroupOperator.And, Criterias = q.ToList() };
 
-                        Build(builder, logicalOperator, group);
+                        Build(builder, op, group);
                     }
                     break;
-                case CriteriaOperator.IsEqualTo:
-                    builder.AppendFormat("{0}==@{1}", criteria.Field, _values.Count);
-                    _values.Add(criteria.Value);
-                    break;
-                case CriteriaOperator.IsNotEqualTo:
-                    builder.AppendFormat("{0}!=@{1}", criteria.Field, _values.Count);
-                    _values.Add(criteria.Value);
-                    break;
-                case CriteriaOperator.IsLessThan:
-                    builder.AppendFormat("{0}<@{1}", criteria.Field, _values.Count);
-                    _values.Add(criteria.Value);
-                    break;
-                case CriteriaOperator.IsLessThanOrEqualTo:
-                    builder.AppendFormat("{0}<=@{1}", criteria.Field, _values.Count);
-                    _values.Add(criteria.Value);
-                    break;
-                case CriteriaOperator.IsGreaterThan:
-                    builder.AppendFormat("{0}>@{1}", criteria.Field, _values.Count);
-                    _values.Add(criteria.Value);
-                    break;
-                case CriteriaOperator.IsGreaterThanOrEqualTo:
-                    builder.AppendFormat("{0}>=@{1}", criteria.Field, _values.Count);
-                    _values.Add(criteria.Value);
-                    break;
-                case CriteriaOperator.BeginsWith:
-                    builder.AppendFormat("{0}.StartsWith(@{1})", criteria.Field, _values.Count);
-                    _values.Add(criteria.Value);
-                    break;
-                case CriteriaOperator.DoesNotBeginWith:
-                    builder.AppendFormat("{0}.StartsWith(@{1})==false", criteria.Field, _values.Count);
-                    _values.Add(criteria.Value);
-                    break;
-                case CriteriaOperator.EndsWith:
-                    builder.AppendFormat("{0}.EndsWith(@{1})", criteria.Field, _values.Count);
-                    _values.Add(criteria.Value);
-                    break;
-                case CriteriaOperator.DoesNotEndWith:
-                    builder.AppendFormat("{0}.EndsWith(@{1})==false", criteria.Field, _values.Count);
-                    _values.Add(criteria.Value);
-                    break;
-                case CriteriaOperator.Contains:
-                    builder.AppendFormat("{0}.Contains(@{1})", criteria.Field, _values.Count);
-                    _values.Add(criteria.Value);
-                    break;
-                case CriteriaOperator.DoesNotContain:
-                    builder.AppendFormat("{0}.Contains(@{1})==false", criteria.Field, _values.Count);
-                    _values.Add(criteria.Value);
-                    break;
-                case CriteriaOperator.IsNull:
-                    builder.AppendFormat("{0}==null", criteria.Field);
-                    break;
-                case CriteriaOperator.IsNotNull:
-                    builder.AppendFormat("{0}!=null", criteria.Field);
+                default:
+                    var format = GetFormat(criteria.Operator, property.PropertyType);
+                    if (!string.IsNullOrEmpty(format))
+                        builder.AppendFormat(format, criteria.Field, valueIndex);
                     break;
             }
         }
+        #endregion
+
+        #region predicate format provider
+        private string GetFormat(CriteriaOperator op, Type fieldType)
+        {
+            switch (op)
+            {
+                case CriteriaOperator.IsEqualTo:
+                    return IsEqualTo(fieldType);
+                case CriteriaOperator.IsNotEqualTo:
+                    return IsNotEqualTo(fieldType);
+                case CriteriaOperator.IsLessThan:
+                    return IsLessThan(fieldType);
+                case CriteriaOperator.IsLessThanOrEqualTo:
+                    return IsLessThanOrEqualTo(fieldType);
+                case CriteriaOperator.IsGreaterThan:
+                    return IsGreaterThan(fieldType);
+                case CriteriaOperator.IsGreaterThanOrEqualTo:
+                    return IsGreaterThanOrEqualTo(fieldType);
+                case CriteriaOperator.BeginsWith:
+                    return BeginsWith(fieldType);
+                case CriteriaOperator.DoesNotBeginWith:
+                    return DoesNotBeginWith(fieldType);
+                case CriteriaOperator.EndsWith:
+                    return EndsWith(fieldType);
+                case CriteriaOperator.DoesNotEndWith:
+                    return DoesNotEndWith(fieldType);
+                case CriteriaOperator.Contains:
+                    return Contains(fieldType);
+                case CriteriaOperator.DoesNotContain:
+                    return DoesNotContain(fieldType);
+                case CriteriaOperator.IsNull:
+                    return IsNull(fieldType);
+                case CriteriaOperator.IsNotNull:
+                    return IsNotNull(fieldType);
+                default:
+                    return null;
+            }
+        }
+
+        protected virtual string IsNotNull(Type fieldType)
+        {
+            return "{0}!=null";
+        }
+
+        protected virtual string IsNull(Type fieldType)
+        {
+            return "{0}==null";
+        }
+
+        protected virtual string DoesNotContain(Type fieldType)
+        {
+            return "{0}.ToLower().Contains(@{1}.ToLower())==false";
+        }
+
+        protected virtual string Contains(Type fieldType)
+        {
+            return "{0}.ToLower().Contains(@{1}.ToLower())";
+        }
+
+        protected virtual string DoesNotEndWith(Type fieldType)
+        {
+            return "{0}.ToLower().EndsWith(@{1}.ToLower())==false";
+        }
+
+        protected virtual string EndsWith(Type fieldType)
+        {
+            return "{0}.ToLower().EndsWith(@{1}.ToLower())";
+        }
+
+        protected virtual string DoesNotBeginWith(Type fieldType)
+        {
+            return "{0}.ToLower().StartsWith(@{1}.ToLower())==false";
+        }
+
+        protected virtual string BeginsWith(Type fieldType)
+        {
+            return "{0}.ToLower().StartsWith(@{1}.ToLower())";
+        }
+
+        protected virtual string IsGreaterThanOrEqualTo(Type fieldType)
+        {
+            return "{0}>=@{1}";
+        }
+
+        protected virtual string IsGreaterThan(Type fieldType)
+        {
+            return "{0}>@{1}";
+        }
+
+        protected virtual string IsLessThanOrEqualTo(Type fieldType)
+        {
+            return "{0}<=@{1}";
+        }
+
+        protected virtual string IsLessThan(Type fieldType)
+        {
+            return "{0}<@{1}";
+        }
+
+        protected virtual string IsNotEqualTo(Type fieldType)
+        {
+            if (fieldType == typeof(string))
+                return "{0}.ToLower()!=@{1}.ToLower()";
+            return "{0}!=@{1}";
+        }
+
+        protected virtual string IsEqualTo(Type fieldType)
+        {
+            if (fieldType == typeof(string))
+                return "{0}.ToLower()==@{1}.ToLower()";
+            return "{0}==@{1}";
+        }
+        #endregion
     }
 }
