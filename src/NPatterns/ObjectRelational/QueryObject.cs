@@ -11,15 +11,15 @@ namespace NPatterns.ObjectRelational
     /// using System.Linq.Dynamic;
     /// .Where(aQueryObject.Predicate,aQueryObject.Values);
     /// </summary>
-    public class QueryObject<T> where T : class
+    public class QueryObject
     {
         private readonly List<object> _values;
         private readonly StringBuilder _predicate;
         private readonly PropertyInfo[] _properties;
 
-        public QueryObject()
+        public QueryObject(Type elementType)
         {
-            _properties = typeof(T).GetProperties();
+            _properties = elementType.GetProperties();
             _predicate = new StringBuilder();
             _values = new List<object>();
         }
@@ -34,12 +34,12 @@ namespace NPatterns.ObjectRelational
             get { return _values.ToArray(); }
         }
 
-        public void Add(CriteriaGroupOperator op, Criteria criteria)
+        public void Add(Criteria criteria, CriteriaGroupOperator op = CriteriaGroupOperator.And)
         {
             Build(_predicate, op, criteria);
         }
 
-        public void Add(CriteriaGroupOperator op, CriteriaGroup criteriaGroup)
+        public void Add(CriteriaGroup criteriaGroup, CriteriaGroupOperator op = CriteriaGroupOperator.And)
         {
             Build(_predicate, op, criteriaGroup);
         }
