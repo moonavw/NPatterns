@@ -5,38 +5,40 @@ namespace NPatterns.ObjectRelational.EF
 {
     public class Repository<T> : IRepository<T> where T : class
     {
-        private readonly IDbSet<T> _dbSet;
-
-        public Repository(IDbSet<T> dbSet)
+        public Repository(DbContext context)
         {
-            _dbSet = dbSet;
+            Context = context;
+            Set = Context.Set<T>();
         }
+
+        protected DbContext Context { get; private set; }
+        protected IDbSet<T> Set { get; private set; }
 
         #region IRepository<T> Members
 
         public IQueryable<T> AsQueryable()
         {
-            return _dbSet; //.AsNoTracking();
+            return Set;
         }
 
         public T Find(params object[] keyValues)
         {
-            return _dbSet.Find(keyValues);
+            return Set.Find(keyValues);
         }
 
         public void Add(T entity)
         {
-            _dbSet.Add(entity);
+            Set.Add(entity);
         }
 
         public void Attach(T entity)
         {
-            _dbSet.Attach(entity);
+            Set.Attach(entity);
         }
 
         public void Remove(T entity)
         {
-            _dbSet.Remove(entity);
+            Set.Remove(entity);
         }
 
         #endregion
