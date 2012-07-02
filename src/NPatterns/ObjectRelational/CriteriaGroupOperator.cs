@@ -1,8 +1,11 @@
+using System.Runtime.Serialization;
+
 namespace NPatterns.ObjectRelational
 {
+    [DataContract]
     public enum CriteriaGroupOperator
     {
-        And,
-        Or
+        [EnumMember(Value = "AND")] All,
+        [EnumMember(Value = "OR")] Any
     }
 }

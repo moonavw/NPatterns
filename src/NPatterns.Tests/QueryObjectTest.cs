@@ -30,7 +30,7 @@ namespace NPatterns.Tests
         [TestMethod]
         public void TestCriteriaGroupSerialization()
         {
-            var criteriaGroup = new CriteriaGroup { Operator = CriteriaGroupOperator.Or };
+            var criteriaGroup = new CriteriaGroup { Operator = CriteriaGroupOperator.Any };
             criteriaGroup.Criterias.Add(new Criteria { Field = "Version", Operator = CriteriaOperator.IsEqualTo, Value = 1.0 });
             criteriaGroup.Criterias.Add(new Criteria { Field = "Name", Operator = CriteriaOperator.Contains, Value = "NPatterns" });
 
@@ -63,7 +63,7 @@ namespace NPatterns.Tests
             var query = new QueryObject(typeof(Product));
             query.Add(new Criteria { Field = "Name", Operator = CriteriaOperator.IsNotNull });
 
-            var criteriaGroup = new CriteriaGroup { Operator = CriteriaGroupOperator.Or };
+            var criteriaGroup = new CriteriaGroup { Operator = CriteriaGroupOperator.Any };
             criteriaGroup.Criterias.Add(new Criteria { Field = "Name", Operator = CriteriaOperator.IsEqualTo, Value = "npatterns" });
             criteriaGroup.Criterias.Add(new Criteria { Field = "Name", Operator = CriteriaOperator.EndsWith, Value = "ioc" });
 
@@ -72,7 +72,7 @@ namespace NPatterns.Tests
             var result = source.AsQueryable().Where(query.Predicate, query.Values).ToList();
             Assert.AreEqual(2, result.Count);
 
-            query.Add(new Criteria { Field = "Version", Operator = CriteriaOperator.IsEqualTo, Value = 1.0 }, CriteriaGroupOperator.Or);
+            query.Add(new Criteria { Field = "Version", Operator = CriteriaOperator.IsEqualTo, Value = 1.0 }, CriteriaGroupOperator.Any);
             var result2 = source.AsQueryable().Where(query.Predicate, query.Values).ToList();
             Assert.AreEqual(3, result2.Count);
         }
