@@ -34,12 +34,12 @@ namespace NPatterns.ObjectRelational
             get { return _values.ToArray(); }
         }
 
-        public void Add(Criteria criteria, CriteriaGroupOperator op = CriteriaGroupOperator.All)
+        public void Add(Criteria criteria, CriteriaGroupOperator op = CriteriaGroupOperator.And)
         {
             Build(_predicate, op, criteria);
         }
 
-        public void Add(CriteriaGroup criteriaGroup, CriteriaGroupOperator op = CriteriaGroupOperator.All)
+        public void Add(CriteriaGroup criteriaGroup, CriteriaGroupOperator op = CriteriaGroupOperator.And)
         {
             Build(_predicate, op, criteriaGroup);
         }
@@ -91,7 +91,7 @@ namespace NPatterns.ObjectRelational
                             select
                                 new Criteria { Field = criteria.Field, Operator = CriteriaOperator.IsEqualTo, Value = z.Trim() };
 
-                        var group = new CriteriaGroup { Operator = CriteriaGroupOperator.Any, Criterias = q.ToList() };
+                        var group = new CriteriaGroup { Operator = CriteriaGroupOperator.Or, Criterias = q.ToList() };
 
                         Build(builder, op, group);
                     }
@@ -104,7 +104,7 @@ namespace NPatterns.ObjectRelational
                             select
                                 new Criteria { Field = criteria.Field, Operator = CriteriaOperator.IsNotEqualTo, Value = z.Trim() };
 
-                        var group = new CriteriaGroup { Operator = CriteriaGroupOperator.All, Criterias = q.ToList() };
+                        var group = new CriteriaGroup { Operator = CriteriaGroupOperator.And, Criterias = q.ToList() };
 
                         Build(builder, op, group);
                     }
