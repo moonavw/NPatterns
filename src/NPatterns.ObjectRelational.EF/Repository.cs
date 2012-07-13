@@ -21,19 +21,24 @@ namespace NPatterns.ObjectRelational.EF
             return Set;
         }
 
-        public T Find(params object[] keyValues)
-        {
-            return Set.Find(keyValues);
-        }
-
         public void Add(T entity)
         {
             Set.Add(entity);
         }
 
-        public void Attach(T entity)
+        public void Modify(T entity)
+        {
+            Context.Entry(entity).State = System.Data.EntityState.Modified;
+        }
+
+        public void Track(T entity)
         {
             Set.Attach(entity);
+        }
+
+        public void Merge(T original, T current)
+        {
+            Context.Entry(original).CurrentValues.SetValues(current);
         }
 
         public void Remove(T entity)

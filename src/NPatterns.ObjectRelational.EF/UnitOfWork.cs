@@ -1,4 +1,6 @@
 ﻿using System.Data.Entity;
+using System.Data.Entity.Infrastructure;
+using System.Linq;
 
 namespace NPatterns.ObjectRelational.EF
 {
@@ -18,9 +20,36 @@ namespace NPatterns.ObjectRelational.EF
             Context.SaveChanges();
         }
 
-        IRepository<T> IUnitOfWork.Repository<T>()
+        public void CommitAndRefresh()
         {
-            return new Repository<T>(Context);
+            bool saveFailed = false;
+
+            do
+            {
+                try
+                {
+                    Context.SaveChanges();
+
+                    saveFailed = false;
+                }
+                catch (DbUpdateConcurrencyException ex)
+                {
+                    saveFailed = true;
+
+                    ex.Entries.ToList()
+                              .ForEach(entry => entry.OriginalValues.SetValues(entry.GetDatabaseValues()));
+
+                }
+            } while (saveFailed);
+        }
+
+        public void Rollback()
+        {
+            // set all entities in change tracker 
+            // as 'unchanged state'
+            Context.ChangeTracker.Entries()
+                              .ToList()
+                              .ForEach(entry => entry.State = System.Data.EntityState.Unchanged);
         }
 
         #endregion
