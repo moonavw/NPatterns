@@ -4,6 +4,9 @@ using System.Linq;
 
 namespace NPatterns.Messaging
 {
+    /// <summary>
+    /// implement the MessageBus with concurrent collection for callbacks
+    /// </summary>
     public class MessageBus : IMessageBus
     {
         private readonly ConcurrentDictionary<int, Delegate> _callbacks;

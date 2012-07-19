@@ -1,14 +1,10 @@
-﻿using System;
-using System.Diagnostics;
-using System.IO;
-using System.Text;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NPatterns.ObjectRelational;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using System.Linq.Dynamic;
+using QueryObject = NPatterns.ObjectRelational.DynamicQuery.QueryObject;
 
 namespace NPatterns.Tests
 {
@@ -60,7 +56,7 @@ namespace NPatterns.Tests
                                  new Product {Name = null,Version = 0}
                              };
 
-            var query = new QueryObject(typeof(Product));
+            var query = new QueryObject();
             query.Add(new Criteria { Field = "Name", Operator = CriteriaOperator.IsNotNull });
 
             var criteriaGroup = new CriteriaGroup { Operator = CriteriaGroupOperator.Or };
@@ -69,11 +65,11 @@ namespace NPatterns.Tests
 
             query.Add(criteriaGroup);
 
-            var result = source.AsQueryable().Where(query.Predicate, query.Values).ToList();
+            var result = query.Execute(source.AsQueryable()).ToList();
             Assert.AreEqual(2, result.Count);
 
             query.Add(new Criteria { Field = "Version", Operator = CriteriaOperator.IsEqualTo, Value = 1.0 }, CriteriaGroupOperator.Or);
-            var result2 = source.AsQueryable().Where(query.Predicate, query.Values).ToList();
+            var result2 = query.Execute(source.AsQueryable()).ToList();
             Assert.AreEqual(3, result2.Count);
         }
 

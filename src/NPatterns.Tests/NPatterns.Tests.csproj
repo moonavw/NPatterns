@@ -43,9 +43,6 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
-    <Reference Include="System.Linq.Dynamic">
-      <HintPath>..\packages\System.Linq.Dynamic.1.0.0\lib\net40\System.Linq.Dynamic.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <CodeAnalysisDependentAssemblyPaths Condition=" '$(VS100COMNTOOLS)' != '' " Include="$(VS100COMNTOOLS)..\IDE\PrivateAssemblies">
@@ -57,6 +54,10 @@
     <Compile Include="QueryObjectTest.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\NPatterns.ObjectRelational.DynamicQuery\NPatterns.ObjectRelational.DynamicQuery.csproj">
+      <Project>{35D177FE-87A5-4776-8FC4-676B841B697D}</Project>
+      <Name>NPatterns.ObjectRelational.DynamicQuery</Name>
+    </ProjectReference>
     <ProjectReference Include="..\NPatterns\NPatterns.csproj">
       <Project>{9BDF56E3-6B17-438B-AFEE-11120410B9C8}</Project>
       <Name>NPatterns</Name>

@@ -2,6 +2,9 @@ using System.Runtime.Serialization;
 
 namespace NPatterns.ObjectRelational
 {
+    /// <summary>
+    /// A Filter Descriptor for QueryObject
+    /// </summary>
     [DataContract]
     public class Criteria
     {

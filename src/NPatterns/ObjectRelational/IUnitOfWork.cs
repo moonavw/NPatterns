@@ -1,7 +1,7 @@
 namespace NPatterns.ObjectRelational
 {
     /// <summary>
-    /// Contract for ¡®UnitOfWork pattern¡¯. For more
+    /// Contract for "UnitOfWork pattern". For more
     /// related info see http://martinfowler.com/eaaCatalog/unitOfWork.html or
     /// http://msdn.microsoft.com/en-us/magazine/dd882510.aspx
     /// </summary>
