@@ -6,7 +6,7 @@ namespace NPatterns.ObjectRelational.DynamicQuery
     /// <summary>
     /// implement the QueryObject with DynamicQuery (System.Linq.Dynamic)
     /// </summary>
-    public class QueryObject : NPatterns.ObjectRelational.QueryObject
+    public class DynamicQueryObject : QueryObject
     {
         public override IQueryable<T> Execute<T>(IQueryable<T> source)
         {

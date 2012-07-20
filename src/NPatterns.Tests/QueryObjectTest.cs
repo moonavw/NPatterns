@@ -2,9 +2,9 @@
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NPatterns.ObjectRelational;
+using NPatterns.ObjectRelational.DynamicQuery;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-using QueryObject = NPatterns.ObjectRelational.DynamicQuery.QueryObject;
 
 namespace NPatterns.Tests
 {
@@ -56,7 +56,7 @@ namespace NPatterns.Tests
                                  new Product {Name = null,Version = 0}
                              };
 
-            var query = new QueryObject();
+            var query = new DynamicQueryObject();
             query.Add(new Criteria { Field = "Name", Operator = CriteriaOperator.IsNotNull });
 
             var criteriaGroup = new CriteriaGroup { Operator = CriteriaGroupOperator.Or };

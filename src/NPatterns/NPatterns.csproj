@@ -58,6 +58,7 @@
     <Compile Include="ObjectRelational\QueryObject.cs" />
     <Compile Include="ObjectRelational\IRepository.cs" />
     <Compile Include="ObjectRelational\IUnitOfWork.cs" />
+    <Compile Include="ObjectRelational\QueryObjectExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
