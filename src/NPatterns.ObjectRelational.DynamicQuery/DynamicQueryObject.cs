@@ -13,9 +13,12 @@ namespace NPatterns.ObjectRelational.DynamicQuery
             if (!Valid)
                 return source;
 
-            var builder = new PredicateBuilder(typeof(T));
+            var builder = new PredicateBuilder<T>();
             foreach (var criteriaGroup in CriteriaGroups)
                 builder.Add(criteriaGroup.Item1, criteriaGroup.Item2);
+
+            if (string.IsNullOrWhiteSpace(builder.Predicate))
+                return source;
 
             return source.Where(builder.Predicate, builder.Values);
         }

@@ -6,15 +6,13 @@ using System.Text;
 
 namespace NPatterns.ObjectRelational.DynamicQuery
 {
-    internal class PredicateBuilder
+    internal class PredicateBuilder<T> where T : class
     {
         private readonly List<object> _values;
         private readonly StringBuilder _predicate;
-        private readonly PropertyInfo[] _properties;
 
-        public PredicateBuilder(Type elementType)
+        public PredicateBuilder()
         {
-            _properties = elementType.GetProperties();
             _predicate = new StringBuilder();
             _values = new List<object>();
         }
@@ -55,9 +53,25 @@ namespace NPatterns.ObjectRelational.DynamicQuery
             builder.AppendFormat("({0})", sb);
         }
 
+        private PropertyInfo GetPropertyInfo(Type objectType, string propertyName)
+        {
+            //propertyName = propertyName.Trim('.');
+            int index = propertyName.IndexOf(".");
+
+            if (index < 0)
+                return objectType.GetProperty(propertyName);
+
+            string name = propertyName.Substring(0, index);
+            var property = objectType.GetProperty(name);
+            if (property == null)
+                return null;
+            string next = propertyName.Substring(index + 1);
+            return GetPropertyInfo(property.PropertyType, next);
+        }
+
         private void Build(StringBuilder builder, CriteriaGroupOperator op, Criteria criteria)
         {
-            var property = _properties.FirstOrDefault(z => z.Name == criteria.Field);
+            var property = GetPropertyInfo(typeof(T), criteria.Field);
             if (property == null)
                 return;
 

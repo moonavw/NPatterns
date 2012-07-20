@@ -4,6 +4,9 @@ using System.Linq;
 
 namespace NPatterns.ObjectRelational.EF
 {
+    /// <summary>
+    /// implement the IUnitOfWork with EF
+    /// </summary>
     public class UnitOfWork : IUnitOfWork
     {
         public UnitOfWork(DbContext context)

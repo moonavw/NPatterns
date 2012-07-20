@@ -73,10 +73,65 @@ namespace NPatterns.Tests
             Assert.AreEqual(3, result2.Count);
         }
 
+        [TestMethod]
+        public void TestQueryObjectExecutionForComplexType()
+        {
+            var source = new List<ProductFeature>
+                             {
+                                 new ProductFeature
+                                     {
+                                         Product = new Product {Name = "NPatterns", Version = 1.2},
+                                         Feature = new Feature {Name = "IUnitOfWork"}
+                                     },
+                                 new ProductFeature
+                                     {
+                                         Product = new Product {Name = "NPatterns.Messaging.IoC", Version = 1.1},
+                                         Feature = new Feature {Name = "MessageBus"}
+                                     },
+                                 new ProductFeature
+                                     {
+                                         Product = new Product {Name = "NPatterns.ObjectRelational.EF", Version = 1.0},
+                                         Feature = new Feature {Name = "UnitOfWork"}
+                                     },
+                                 new ProductFeature
+                                     {
+                                         Product = new Product(),
+                                         Feature = new Feature()
+                                     }
+                             };
+
+            var query = new DynamicQueryObject();
+            query.Add(new Criteria { Field = "Product.Name", Operator = CriteriaOperator.IsNotNull });
+
+            var criteriaGroup = new CriteriaGroup { Operator = CriteriaGroupOperator.Or };
+            criteriaGroup.Criterias.Add(new Criteria { Field = "Product.Name", Operator = CriteriaOperator.IsEqualTo, Value = "npatterns" });
+            criteriaGroup.Criterias.Add(new Criteria { Field = "Product.Name", Operator = CriteriaOperator.EndsWith, Value = "ioc" });
+
+            query.Add(criteriaGroup);
+
+            var result = query.Execute(source.AsQueryable()).ToList();
+            Assert.AreEqual(2, result.Count);
+
+            query.Add(new Criteria { Field = "Product.Version", Operator = CriteriaOperator.IsEqualTo, Value = 1.0 }, CriteriaGroupOperator.Or);
+            var result2 = query.Execute(source.AsQueryable()).ToList();
+            Assert.AreEqual(3, result2.Count);
+        }
+
         public class Product
         {
             public string Name { get; set; }
             public double Version { get; set; }
+        }
+
+        public class Feature
+        {
+            public string Name { get; set; }
+        }
+
+        public class ProductFeature
+        {
+            public Product Product { get; set; }
+            public Feature Feature { get; set; }
         }
     }
 }

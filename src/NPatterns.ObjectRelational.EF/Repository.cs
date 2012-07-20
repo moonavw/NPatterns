@@ -3,6 +3,10 @@ using System.Linq;
 
 namespace NPatterns.ObjectRelational.EF
 {
+    /// <summary>
+    /// implement the IRepository with EF
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
     public class Repository<T> : IRepository<T> where T : class
     {
         public Repository(DbContext context)
