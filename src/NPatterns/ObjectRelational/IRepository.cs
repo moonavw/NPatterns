@@ -18,6 +18,20 @@ namespace NPatterns.ObjectRelational
         IQueryable<TEntity> AsQueryable();
 
         /// <summary>
+        /// Find all elements by predicate
+        /// </summary>
+        /// <param name="predicate">expression of predicate</param>
+        /// <returns>queryable result</returns>
+        IQueryable<TEntity> FindAll(Expression<Func<TEntity, bool>> predicate);
+
+        /// <summary>
+        /// Find single(first or default) element by predicate
+        /// </summary>
+        /// <param name="predicate">expression of predicate</param>
+        /// <returns>entity</returns>
+        TEntity Find(Expression<Func<TEntity, bool>> predicate);
+
+        /// <summary>
         /// Add entity into repository
         /// </summary>
         /// <param name="entity">Item to add</param>
@@ -49,18 +63,5 @@ namespace NPatterns.ObjectRelational
         /// <param name="original">The persisted item</param>
         /// <param name="current">The current item</param>
         void Merge(TEntity original, TEntity current);
-    }
-
-    public static class RepositoryExtensions
-    {
-        public static IQueryable<T> FindAll<T>(this IRepository<T> repository, Expression<Func<T, bool>> predicate) where T : class
-        {
-            return repository.AsQueryable().Where(predicate);
-        }
-
-        public static T Find<T>(this IRepository<T> repository, Expression<Func<T, bool>> predicate) where T : class
-        {
-            return FindAll(repository, predicate).FirstOrDefault();
-        }
     }
 }

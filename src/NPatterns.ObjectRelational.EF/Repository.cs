@@ -1,51 +1,63 @@
+using System;
 using System.Data.Entity;
 using System.Linq;
+using System.Linq.Expressions;
 
 namespace NPatterns.ObjectRelational.EF
 {
     /// <summary>
     /// implement the IRepository with EF
     /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public class Repository<T> : IRepository<T> where T : class
+    /// <typeparam name="TEntity">type of the entity in this repository</typeparam>
+    public class Repository<TEntity> : IRepository<TEntity> where TEntity : class
     {
         public Repository(DbContext context)
         {
             Context = context;
-            Set = Context.Set<T>();
+            Set = Context.Set<TEntity>();
         }
 
         protected DbContext Context { get; private set; }
-        protected IDbSet<T> Set { get; private set; }
+        protected IDbSet<TEntity> Set { get; private set; }
 
         #region IRepository<T> Members
 
-        public IQueryable<T> AsQueryable()
+        public IQueryable<TEntity> AsQueryable()
         {
             return Set;
         }
 
-        public void Add(T entity)
+        public IQueryable<TEntity> FindAll(Expression<Func<TEntity, bool>> predicate)
+        {
+            return Set.Where(predicate);
+        }
+
+        public TEntity Find(Expression<Func<TEntity, bool>> predicate)
+        {
+            return Set.FirstOrDefault(predicate);
+        }
+
+        public void Add(TEntity entity)
         {
             Set.Add(entity);
         }
 
-        public void Modify(T entity)
+        public void Modify(TEntity entity)
         {
             Context.Entry(entity).State = System.Data.EntityState.Modified;
         }
 
-        public void Track(T entity)
+        public void Track(TEntity entity)
         {
             Set.Attach(entity);
         }
 
-        public void Merge(T original, T current)
+        public void Merge(TEntity original, TEntity current)
         {
             Context.Entry(original).CurrentValues.SetValues(current);
         }
 
-        public void Remove(T entity)
+        public void Remove(TEntity entity)
         {
             Set.Remove(entity);
         }
