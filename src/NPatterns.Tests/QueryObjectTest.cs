@@ -12,7 +12,7 @@ namespace NPatterns.Tests
     public class QueryObjectTest
     {
         [TestMethod]
-        public void TestCriteriaSerialization()
+        public void SerializeCriteria()
         {
             var criteria = new Criteria { Field = "Version", Operator = CriteriaOperator.IsEqualTo, Value = 1.0 };
             var jsonString = JsonConvert.SerializeObject(criteria, new StringEnumConverter());
@@ -24,7 +24,7 @@ namespace NPatterns.Tests
         }
 
         [TestMethod]
-        public void TestCriteriaGroupSerialization()
+        public void SerializeCriteriaGroup()
         {
             var criteriaGroup = new CriteriaGroup { Operator = CriteriaGroupOperator.Or };
             criteriaGroup.Criterias.Add(new Criteria { Field = "Version", Operator = CriteriaOperator.IsEqualTo, Value = 1.0 });
@@ -46,7 +46,7 @@ namespace NPatterns.Tests
         }
 
         [TestMethod]
-        public void TestQueryObjectExecution()
+        public void ExecuteDynamicQueryObject()
         {
             var source = new List<Product>
                              {
@@ -74,7 +74,7 @@ namespace NPatterns.Tests
         }
 
         [TestMethod]
-        public void TestQueryObjectExecutionForComplexType()
+        public void ExecuteDynamicQueryObjectWithComplexType()
         {
             var source = new List<ProductFeature>
                              {
