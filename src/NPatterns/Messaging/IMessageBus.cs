@@ -8,12 +8,12 @@ namespace NPatterns.Messaging
     public interface IMessageBus
     {
         /// <summary>
-        /// register a callback for a specific message type.
+        /// register a callback for a message type.
         /// the callback will be invoked when the message published on bus
         /// </summary>
         /// <typeparam name="T">type of message</typeparam>
         /// <param name="callback">callback action</param>
-        /// <returns>a disposable handle to release the callback from bus</returns>
+        /// <returns>disposer to remove the callback from bus</returns>
         IDisposable Subscribe<T>(Action<T> callback) where T : class;
 
         /// <summary>

@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Text;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Practices.ServiceLocation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NPatterns.Messaging;
 using Ninject;
-using Microsoft.Practices.ServiceLocation;
 using NinjectAdapter;
 
 namespace NPatterns.Tests
@@ -18,37 +17,52 @@ namespace NPatterns.Tests
         {
             IMessageBus bus = new MessageBus();
 
-            var msg = new UserCreatedEvent { UserName = "abc" };
+            var msg = new TestMessage();
 
             //see what will happen if publish right away
             bus.Publish(msg);
-            Assert.IsFalse(msg.Handled);//not handled, since no handlers in bus yet
+            Assert.IsFalse(msg.Handled); //not handled, since no handlers in bus yet
 
             //register a handler in bus, and dispose after published.
-            using (bus.Subscribe<UserCreatedEvent>(m =>
-                                                        {
-                                                            m.Handled = true;
-                                                        }))
+            using (bus.Subscribe<TestMessage>(m => m.HandledBy.Add("anonymous handler")))
             {
                 bus.Publish(msg);
             }
-            Assert.IsTrue(msg.Handled);//handled by that handler
+            Assert.IsTrue(msg.Handled); //handled by that handler
 
-            msg.Handled = false;//reset
+            msg.HandledBy.Clear(); //reset
 
             //OR you may register a handler like this:
-            var handler = new UserCreatedEventHandler();
-            using (bus.Subscribe<UserCreatedEvent>(handler.Handle))
+            var handler = new TestMessageHandler();
+            using (bus.Subscribe(handler))
             {
                 bus.Publish(msg);
             }
-            Assert.IsTrue(msg.Handled);//handled by that handler
+            Assert.IsTrue(msg.Handled); //handled by that handler
 
-            msg.Handled = false;//reset
+            msg.HandledBy.Clear(); //reset
 
             //see what will happen after disposed handlers
             bus.Publish(msg);
-            Assert.IsFalse(msg.Handled);//not handled, since that handler removed from bus by disposing
+            Assert.IsFalse(msg.Handled); //not handled, since that handler removed from bus by disposing
+        }
+
+        [TestMethod]
+        public void TestBasicMessageBusWithMultiHandlers()
+        {
+            IMessageBus bus = new MessageBus();
+
+            var msg = new TestMessage();
+
+            var handler = new TestMessageHandler();
+            //register following handlers: 5 in total
+            bus.Subscribe<TestMessage>(m => m.HandledBy.Add("anonymous handler1"));
+            bus.Subscribe<TestMessage>(m => m.HandledBy.Add("anonymous handler2"));
+            bus.Subscribe<TestMessage>(m => m.HandledBy.Add("anonymous handler3"));
+            bus.Subscribe(handler);
+            bus.Subscribe(handler);//duplicate one will be ignored
+            bus.Publish(msg);
+            Assert.AreEqual(4, msg.HandledBy.Count);//actually handled by 4 handlers
         }
 
         [TestMethod]
@@ -60,31 +74,52 @@ namespace NPatterns.Tests
             ServiceLocator.SetLocatorProvider(() => new NinjectServiceLocator(kernel));
 
             //we can also use IoC, instead of "new IoC.MessageBus()"
-            kernel.Bind<IMessageBus>().To<NPatterns.Messaging.IoC.MessageBus>().InSingletonScope();//make it singleton
+            kernel.Bind<IMessageBus>().To<Messaging.IoC.MessageBus>().InSingletonScope(); //make it singleton
 
             //configure the handlers
-            kernel.Bind<IHandler<UserCreatedEvent>>().To<UserCreatedEventHandler>();
+            kernel.Bind<IHandler<TestMessage>>().To<TestMessageHandler>();
 
             //get instance of bus
             IMessageBus bus = kernel.Get<IMessageBus>();
 
-            var msg = new UserCreatedEvent { UserName = "abc" };
+            var msg = new TestMessage();
             bus.Publish(msg);
-            Assert.IsTrue(msg.Handled);//handled by the instance of UserCreatedEventHandler
+            Assert.IsTrue(msg.Handled); //handled by the instance of UserCreatedEventHandler
         }
 
-        public class UserCreatedEvent
-        {
-            public string UserName { get; set; }
-            public bool Handled { get; set; }
-        }
+        #region Nested type: TestMessage
 
-        public class UserCreatedEventHandler : IHandler<UserCreatedEvent>
+        public class TestMessage
         {
-            public void Handle(UserCreatedEvent message)
+            public TestMessage()
             {
-                message.Handled = true;
+                HandledBy = new List<string>();
+            }
+
+            public List<string> HandledBy { get; set; }
+
+            public bool Handled
+            {
+                get { return HandledBy.Any(); }
             }
         }
+
+        #endregion
+
+        #region Nested type: TestMessageHandler
+
+        public class TestMessageHandler : IHandler<TestMessage>
+        {
+            #region IHandler<TestMessage> Members
+
+            public void Handle(TestMessage message)
+            {
+                message.HandledBy.Add(GetType().Name);
+            }
+
+            #endregion
+        }
+
+        #endregion
     }
 }

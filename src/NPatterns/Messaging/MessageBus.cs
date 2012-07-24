@@ -20,7 +20,7 @@ namespace NPatterns.Messaging
 
         public virtual IDisposable Subscribe<T>(Action<T> callback) where T : class
         {
-            int key = callback.GetHashCode();
+            int key = callback.Method.MetadataToken;
             _callbacks.TryAdd(key, callback);
 
             return new Disposer(() =>
