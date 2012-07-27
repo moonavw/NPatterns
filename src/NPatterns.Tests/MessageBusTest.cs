@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Microsoft.Practices.ServiceLocation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NPatterns.Messaging;
@@ -45,16 +46,9 @@ namespace NPatterns.Tests
             //see what will happen after disposed handlers
             bus.Publish(msg);
             Assert.IsFalse(msg.Handled); //not handled, since that handler removed from bus by disposing
-        }
 
-        [TestMethod]
-        public void TestBasicMessageBusWithMultiHandlers()
-        {
-            IMessageBus bus = new MessageBus();
+            msg.HandledBy.Clear(); //reset
 
-            var msg = new TestMessage();
-
-            var handler = new TestMessageHandler();
             //register following handlers: 5 in total
             bus.Subscribe<TestMessage>(m => m.HandledBy.Add("anonymous handler1"));
             bus.Subscribe<TestMessage>(m => m.HandledBy.Add("anonymous handler2"));
@@ -85,6 +79,37 @@ namespace NPatterns.Tests
             var msg = new TestMessage();
             bus.Publish(msg);
             Assert.IsTrue(msg.Handled); //handled by the instance of UserCreatedEventHandler
+        }
+
+        [TestMethod]
+        public void PublishAsync()
+        {
+            IMessageBus bus = new MessageBus();
+
+            var msg = new TestMessage();
+
+            bus.Subscribe<TestMessage>(m =>
+            {
+                Thread.Sleep(500);
+                m.HandledBy.Add("anonymous handler1");
+            });
+            bus.Subscribe<TestMessage>(m =>
+            {
+                Thread.Sleep(250);
+                m.HandledBy.Add("anonymous handler2");
+            });
+            bus.Subscribe<TestMessage>(m =>
+            {
+                Thread.Sleep(100);
+                m.HandledBy.Add("anonymous handler3");
+            });
+
+            bus.PublishAsync(msg);
+            Thread.Sleep(300);
+            Assert.AreEqual(2, msg.HandledBy.Count);
+            Thread.Sleep(300);
+            Assert.AreEqual(3, msg.HandledBy.Count);
+            Thread.Sleep(5000);
         }
 
         #region Nested type: TestMessage

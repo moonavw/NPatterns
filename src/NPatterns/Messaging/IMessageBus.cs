@@ -18,10 +18,18 @@ namespace NPatterns.Messaging
 
         /// <summary>
         /// publish a message on bus.
-        /// all matched registered callback will be invoked to handle this message
+        /// all matched registered callback will handle this message
         /// </summary>
         /// <typeparam name="T">type of message</typeparam>
         /// <param name="message">message</param>
         void Publish<T>(T message) where T : class;
+
+        /// <summary>
+        /// publish a message on bus.
+        /// all matched registered callback will handle this message asynchronously
+        /// </summary>
+        /// <typeparam name="T">type of message</typeparam>
+        /// <param name="message">message</param>
+        void PublishAsync<T>(T message) where T : class;
     }
 }

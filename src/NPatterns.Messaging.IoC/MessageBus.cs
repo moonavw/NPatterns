@@ -1,4 +1,7 @@
-﻿using Microsoft.Practices.ServiceLocation;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.Practices.ServiceLocation;
 
 namespace NPatterns.Messaging.IoC
 {
@@ -7,17 +10,13 @@ namespace NPatterns.Messaging.IoC
     /// </summary>
     public class MessageBus : Messaging.MessageBus, IMessageBus
     {
-        #region IMessageBus Members
-
-        public override void Publish<T>(T message)
+        protected override IEnumerable<Action<T>> GetSubscriber<T>()
         {
             var handlers = ServiceLocator.Current.GetAllInstances<IHandler<T>>();
-            foreach (var handler in handlers)
-                handler.Handle(message);
+            var callbacks = new List<Action<T>>(handlers.Select(handler => (Action<T>)handler.Handle));
+            callbacks.AddRange(base.GetSubscriber<T>());
 
-            base.Publish(message);
+            return callbacks;
         }
-
-        #endregion
     }
 }
