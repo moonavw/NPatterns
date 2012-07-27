@@ -1,1 +1,7 @@
-Common Patterns for .NET projects!
+NPatterns is a collection of patterns often used in .NET projects, such as patterns of eaa.
+
+# Patterns implemented:
+* MessageBus (a.k.a EventBus)
+* UnitOfWork
+* Repository
+* QueryObject
