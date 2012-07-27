@@ -109,7 +109,6 @@ namespace NPatterns.Tests
             Assert.AreEqual(2, msg.HandledBy.Count);
             Thread.Sleep(300);
             Assert.AreEqual(3, msg.HandledBy.Count);
-            Thread.Sleep(5000);
         }
 
         #region Nested type: TestMessage
