@@ -7,59 +7,85 @@ using System.Threading.Tasks;
 namespace NPatterns.Messaging
 {
     /// <summary>
-    /// implement the MessageBus with concurrent collection for callbacks
+    /// implement the MessageBus with concurrent collection
     /// </summary>
     public class MessageBus : IMessageBus
     {
-        private readonly ConcurrentDictionary<int, Delegate> _callbacks;
+        private readonly ConcurrentDictionary<int, Subscription> _subscriptions;
 
         public MessageBus()
         {
-            _callbacks = new ConcurrentDictionary<int, Delegate>();
+            _subscriptions = new ConcurrentDictionary<int, Subscription>();
         }
 
         #region IMessageBus Members
 
-        public IDisposable Subscribe<T>(Action<T> callback) where T : class
+        public IDisposable Subscribe<T>(Action<T> callback, int? order = null) where T : class
         {
-            int key = callback.Method.MetadataToken;
-            _callbacks.TryAdd(key, callback);
+            var subscription = new Subscription(typeof(T), callback, order);
+            int key = subscription.Key;
+            _subscriptions.TryAdd(key, subscription);
 
             return new Disposer(() =>
                                     {
-                                        Delegate item;
-                                        _callbacks.TryRemove(key, out item);
+                                        Subscription item;
+                                        _subscriptions.TryRemove(key, out item);
                                     });
         }
 
         public void Publish<T>(T message) where T : class
         {
-            var callbacks = GetSubscriber<T>();
+            var subscribers = GetSubscribers<T>();
 
-            foreach (var callback in callbacks)
+            foreach (var callback in subscribers)
                 callback(message);
         }
 
         public void PublishAsync<T>(T message) where T : class
         {
-            var callbacks = GetSubscriber<T>();
+            var subscribers = GetSubscribers<T>();
 
-            foreach (var callback in callbacks)
+            foreach (var callback in subscribers)
             {
-                Action<T> callback1 = callback;
-                Task.Factory.StartNew(o => callback1((T)o), message); // callback(message);
+                Action<T> action = callback;
+                Task.Factory.StartNew(o => action((T)o), message);
             }
         }
 
         #endregion
 
-        protected virtual IEnumerable<Action<T>> GetSubscriber<T>() where T : class
+        protected virtual IEnumerable<Action<T>> GetSubscribers<T>() where T : class
         {
-            var callbacks = (from action in _callbacks.Values
-                             let typedAction = action as Action<T>
-                             where typedAction != null
-                             select typedAction).ToList();
-            return callbacks;
+            return (from s in _subscriptions.Values
+                    where s.MessageType == typeof(T)
+                    orderby s.Order ascending
+                    select (Action<T>)s.OnMessagePublished).ToList();
         }
+
+        #region Nested type: Subscription
+
+        private class Subscription
+        {
+            public Subscription(Type messageType, Delegate onMessagePublished, int? order = null)
+            {
+                Timestamp = DateTime.Now;
+                MessageType = messageType;
+                OnMessagePublished = onMessagePublished;
+
+                Order = order ?? Timestamp.Ticks;
+            }
+
+            public DateTime Timestamp { get; private set; }
+            public Type MessageType { get; private set; }
+            public Delegate OnMessagePublished { get; private set; }
+            public long Order { get; private set; }
+
+            public int Key
+            {
+                get { return OnMessagePublished.Method.MetadataToken; }
+            }
+        }
+
+        #endregion
     }
 }

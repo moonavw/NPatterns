@@ -10,13 +10,13 @@ namespace NPatterns.Messaging.IoC
     /// </summary>
     public class MessageBus : Messaging.MessageBus, IMessageBus
     {
-        protected override IEnumerable<Action<T>> GetSubscriber<T>()
+        protected override IEnumerable<Action<T>> GetSubscribers<T>()
         {
-            var handlers = ServiceLocator.Current.GetAllInstances<IHandler<T>>();
-            var callbacks = new List<Action<T>>(handlers.Select(handler => (Action<T>)handler.Handle));
-            callbacks.AddRange(base.GetSubscriber<T>());
+            var handlers = ServiceLocator.Current.GetAllInstances<IHandler<T>>().ToList();
 
-            return callbacks;
+            var subscribers = handlers.Select(h => (Action<T>)h.Handle).ToList();
+            subscribers.AddRange(base.GetSubscribers<T>());
+            return subscribers;
         }
     }
 }

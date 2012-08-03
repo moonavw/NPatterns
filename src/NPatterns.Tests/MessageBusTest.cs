@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using Microsoft.Practices.ServiceLocation;
@@ -34,7 +35,7 @@ namespace NPatterns.Tests
             msg.HandledBy.Clear(); //reset
 
             //OR you may register a handler like this:
-            var handler = new TestMessageHandler();
+            var handler = new PrimaryTestMessageHandler();
             using (bus.Subscribe(handler))
             {
                 bus.Publish(msg);
@@ -46,17 +47,6 @@ namespace NPatterns.Tests
             //see what will happen after disposed handlers
             bus.Publish(msg);
             Assert.IsFalse(msg.Handled); //not handled, since that handler removed from bus by disposing
-
-            msg.HandledBy.Clear(); //reset
-
-            //register following handlers: 5 in total
-            bus.Subscribe<TestMessage>(m => m.HandledBy.Add("anonymous handler1"));
-            bus.Subscribe<TestMessage>(m => m.HandledBy.Add("anonymous handler2"));
-            bus.Subscribe<TestMessage>(m => m.HandledBy.Add("anonymous handler3"));
-            bus.Subscribe(handler);
-            bus.Subscribe(handler);//duplicate one will be ignored
-            bus.Publish(msg);
-            Assert.AreEqual(4, msg.HandledBy.Count);//actually handled by 4 handlers
         }
 
         [TestMethod]
@@ -71,14 +61,73 @@ namespace NPatterns.Tests
             kernel.Bind<IMessageBus>().To<Messaging.IoC.MessageBus>().InSingletonScope(); //make it singleton
 
             //configure the handlers
-            kernel.Bind<IHandler<TestMessage>>().To<TestMessageHandler>();
+            kernel.Bind<IHandler<TestMessage>>().To<TertiaryTestMessageHandler>();
+            kernel.Bind<IHandler<TestMessage>>().To<PrimaryTestMessageHandler>();
+            kernel.Bind<IHandler<TestMessage>>().To<SecondaryTestMessageHandler>();
 
             //get instance of bus
             IMessageBus bus = kernel.Get<IMessageBus>();
 
             var msg = new TestMessage();
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
             bus.Publish(msg);
-            Assert.IsTrue(msg.Handled); //handled by the instance of UserCreatedEventHandler
+            sw.Stop();
+            Console.WriteLine(sw.ElapsedMilliseconds);
+            Assert.IsTrue(msg.Handled);
+
+            Assert.AreEqual(typeof(TertiaryTestMessageHandler).Name, msg.HandledBy[0]);
+            Assert.AreEqual(typeof(PrimaryTestMessageHandler).Name, msg.HandledBy[1]);
+            Assert.AreEqual(typeof(SecondaryTestMessageHandler).Name, msg.HandledBy[2]);
+        }
+
+        [TestMethod]
+        public void SequentiallyHandling()
+        {
+            IMessageBus bus = new MessageBus();
+
+            var msg = new TestMessage();
+
+            //specify an order for anonymous handler
+            bus.Subscribe<TestMessage>(m => m.HandledBy.Add("anonymous1"), 10);
+            bus.Subscribe<TestMessage>(m => m.HandledBy.Add("anonymous2"), 11);
+
+            //ordered handlers
+            var handlers = new List<IHandler<TestMessage>>
+                               {
+                                   new SecondaryTestMessageHandler(),
+                                   new TertiaryTestMessageHandler(),
+                                   new PrimaryTestMessageHandler()
+                               };
+
+            for (int i = 0; i < handlers.Count; i++)
+            {
+                bus.Subscribe(handlers[i], i);
+            }
+
+
+            bus.Publish(msg);
+            for (int i = 0; i < handlers.Count; i++)
+            {
+                Assert.AreEqual(handlers[i].GetType().Name, msg.HandledBy[i]);
+            }
+            Assert.AreEqual("anonymous1", msg.HandledBy[3]);
+            Assert.AreEqual("anonymous2", msg.HandledBy[4]);
+        }
+
+        [TestMethod]
+        public void DuplicatedSubscription()
+        {
+            IMessageBus bus = new MessageBus();
+
+            var msg = new TestMessage();
+            //register following handlers: 4 in total
+            bus.Subscribe<TestMessage>(m => m.HandledBy.Add("anonymous handler"));
+            bus.Subscribe<TestMessage>(m => m.HandledBy.Add("anonymous handler"));
+            bus.Subscribe(new PrimaryTestMessageHandler());
+            bus.Subscribe(new PrimaryTestMessageHandler()); //duplicate one will be ignored
+            bus.Publish(msg);
+            Assert.AreEqual(3, msg.HandledBy.Count); //actually handled by 3 handlers
         }
 
         [TestMethod]
@@ -89,27 +138,83 @@ namespace NPatterns.Tests
             var msg = new TestMessage();
 
             bus.Subscribe<TestMessage>(m =>
-            {
-                Thread.Sleep(500);
-                m.HandledBy.Add("anonymous handler1");
-            });
+                                           {
+                                               Thread.Sleep(300);
+                                               m.HandledBy.Add("anonymous handler1");
+                                           });
             bus.Subscribe<TestMessage>(m =>
-            {
-                Thread.Sleep(250);
-                m.HandledBy.Add("anonymous handler2");
-            });
+                                           {
+                                               Thread.Sleep(200);
+                                               m.HandledBy.Add("anonymous handler2");
+                                           });
             bus.Subscribe<TestMessage>(m =>
-            {
-                Thread.Sleep(100);
-                m.HandledBy.Add("anonymous handler3");
-            });
+                                           {
+                                               Thread.Sleep(100);
+                                               m.HandledBy.Add("anonymous handler3");
+                                           });
 
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
             bus.PublishAsync(msg);
-            Thread.Sleep(300);
-            Assert.AreEqual(2, msg.HandledBy.Count);
-            Thread.Sleep(300);
-            Assert.AreEqual(3, msg.HandledBy.Count);
+            sw.Stop();
+            Assert.IsTrue(sw.ElapsedMilliseconds < 100);
+
+            sw.Restart();
+            do
+                Thread.Sleep(100);
+            while (msg.HandledBy.Count < 3);
+
+            sw.Stop();
+            Assert.AreEqual(300, sw.ElapsedMilliseconds, 100);
         }
+
+        #region Nested type: PrimaryTestMessageHandler
+
+        public class PrimaryTestMessageHandler : IHandler<TestMessage>
+        {
+            #region IHandler<TestMessage> Members
+
+            public void Handle(TestMessage message)
+            {
+                message.HandledBy.Add(GetType().Name);
+            }
+
+            #endregion
+        }
+
+        #endregion
+
+        #region Nested type: SecondaryTestMessageHandler
+
+        public class SecondaryTestMessageHandler : IHandler<TestMessage>
+        {
+            #region IHandler<TestMessage> Members
+
+            public void Handle(TestMessage message)
+            {
+                message.HandledBy.Add(GetType().Name);
+            }
+
+            #endregion
+        }
+
+        #endregion
+
+        #region Nested type: TertiaryTestMessageHandler
+
+        public class TertiaryTestMessageHandler : IHandler<TestMessage>
+        {
+            #region IHandler<TestMessage> Members
+
+            public void Handle(TestMessage message)
+            {
+                message.HandledBy.Add(GetType().Name);
+            }
+
+            #endregion
+        }
+
+        #endregion
 
         #region Nested type: TestMessage
 
@@ -126,22 +231,6 @@ namespace NPatterns.Tests
             {
                 get { return HandledBy.Any(); }
             }
-        }
-
-        #endregion
-
-        #region Nested type: TestMessageHandler
-
-        public class TestMessageHandler : IHandler<TestMessage>
-        {
-            #region IHandler<TestMessage> Members
-
-            public void Handle(TestMessage message)
-            {
-                message.HandledBy.Add(GetType().Name);
-            }
-
-            #endregion
         }
 
         #endregion

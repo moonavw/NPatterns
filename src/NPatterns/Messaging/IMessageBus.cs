@@ -13,8 +13,9 @@ namespace NPatterns.Messaging
         /// </summary>
         /// <typeparam name="T">type of message</typeparam>
         /// <param name="callback">callback action</param>
+        /// <param name="order">a sequence number that mark this callback would be invoked in sequence</param>
         /// <returns>disposer to remove the callback from bus</returns>
-        IDisposable Subscribe<T>(Action<T> callback) where T : class;
+        IDisposable Subscribe<T>(Action<T> callback, int? order = null) where T : class;
 
         /// <summary>
         /// publish a message on bus.

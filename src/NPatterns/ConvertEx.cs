@@ -5,6 +5,9 @@ using System.Text;
 
 namespace NPatterns
 {
+    /// <summary>
+    /// extend the convert with some special convertions
+    /// </summary>
     public static class ConvertEx
     {
         /// <summary>
