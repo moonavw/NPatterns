@@ -26,7 +26,7 @@ namespace NPatterns.ObjectRelational
         /// </summary>
         public bool Valid
         {
-            get { return CriteriaGroups != null && CriteriaGroups.Count > 0; }
+            get { return CriteriaGroups != null && CriteriaGroups.Count > 0 && CriteriaGroups.Any(z => z.Item1.Valid); }
         }
 
         /// <summary>

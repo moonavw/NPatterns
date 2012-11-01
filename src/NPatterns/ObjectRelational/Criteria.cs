@@ -16,5 +16,13 @@ namespace NPatterns.ObjectRelational
 
         [DataMember(Name = "data")]
         public object Value { get; set; }
+
+        /// <summary>
+        /// has field or not
+        /// </summary>
+        public bool Valid
+        {
+            get { return !string.IsNullOrWhiteSpace(Field); }
+        }
     }
 }
