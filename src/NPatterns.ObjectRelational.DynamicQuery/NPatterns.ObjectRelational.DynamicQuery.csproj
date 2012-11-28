@@ -49,7 +49,7 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="DynamicQueryObject.cs" />
+    <Compile Include="DynamicQueryObjectExecutor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PredicateBuilder.cs" />
   </ItemGroup>

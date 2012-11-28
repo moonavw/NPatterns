@@ -5,28 +5,47 @@ using System.Linq;
 namespace NPatterns.ObjectRelational
 {
     /// <summary>
-    /// Base class for implement a "QueryObject Pattern", for
+    /// implement a "QueryObject Pattern", for
     /// more information about this pattern see http://martinfowler.com/eaaCatalog/queryObject.html
     /// </summary>
-    public abstract class QueryObject
+    public class QueryObject
     {
-        protected QueryObject()
-        {
-            CriteriaGroups = new List<Tuple<CriteriaGroup, CriteriaGroupOperator>>();
-        }
+        private readonly List<Tuple<CriteriaGroup, CriteriaGroupOperator>> _criteriaGroups =
+            new List<Tuple<CriteriaGroup, CriteriaGroupOperator>>();
+
+        private readonly List<SortDescription> _sortDescriptions = new List<SortDescription>();
 
         /// <summary>
         /// appended criteria groups in this Query object.
         /// each group has a logical operator for concatenating groups
         /// </summary>
-        protected List<Tuple<CriteriaGroup, CriteriaGroupOperator>> CriteriaGroups { get; set; }
+        public IEnumerable<Tuple<CriteriaGroup, CriteriaGroupOperator>> CriteriaGroups
+        {
+            get { return _criteriaGroups; }
+        }
+
+        /// <summary>
+        /// sorting by a list of fields
+        /// </summary>
+        public IEnumerable<SortDescription> SortDescriptions
+        {
+            get { return _sortDescriptions; }
+        }
 
         /// <summary>
         /// has criteria or not
         /// </summary>
-        public bool Valid
+        public bool HasCriteria
         {
-            get { return CriteriaGroups != null && CriteriaGroups.Count > 0 && CriteriaGroups.Any(z => z.Item1.Valid); }
+            get { return _criteriaGroups.Count > 0 && _criteriaGroups.Any(z => z.Item1.Valid); }
+        }
+
+        /// <summary>
+        /// has sort description or not
+        /// </summary>
+        public bool HasSortDescription
+        {
+            get { return _sortDescriptions.Count > 0 && _sortDescriptions.Any(z => z.Valid); }
         }
 
         /// <summary>
@@ -36,7 +55,7 @@ namespace NPatterns.ObjectRelational
         /// <param name="op">AND|OR the criteria</param>
         public void Add(Criteria criteria, CriteriaGroupOperator op = CriteriaGroupOperator.And)
         {
-            CriteriaGroups.Add(
+            _criteriaGroups.Add(
                 new Tuple<CriteriaGroup, CriteriaGroupOperator>(
                     new CriteriaGroup
                         {
@@ -52,18 +71,31 @@ namespace NPatterns.ObjectRelational
         /// <param name="op">AND|OR the criteria group</param>
         public void Add(CriteriaGroup criteriaGroup, CriteriaGroupOperator op = CriteriaGroupOperator.And)
         {
-            CriteriaGroups.Add(
+            _criteriaGroups.Add(
                 new Tuple<CriteriaGroup, CriteriaGroupOperator>(
                     criteriaGroup,
                     op));
         }
 
         /// <summary>
-        /// Execute the QueryObject on source to get filtered result
+        /// append sort description for this query
+        /// </summary>
+        /// <param name="sortDescription"></param>
+        public void Add(SortDescription sortDescription)
+        {
+            _sortDescriptions.Add(sortDescription);
+        }
+
+        /// <summary>
+        /// Execute the QueryObject on source
         /// </summary>
         /// <typeparam name="T">type of the element in source</typeparam>
-        /// <param name="source">queryable source to filter</param>
-        /// <returns>filtered queryable result</returns>
-        public abstract IQueryable<T> Execute<T>(IQueryable<T> source) where T : class;
+        /// <param name="source">queryable source to query</param>
+        /// <param name="executor">query object executor </param>
+        /// <returns>queryable result</returns>
+        public IQueryable<T> Execute<T>(IQueryable<T> source, IQueryObjectExecutor executor) where T : class
+        {
+            return executor.Execute(source, this);
+        }
     }
 }

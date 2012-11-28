@@ -57,10 +57,12 @@
     <Compile Include="ObjectRelational\CriteriaGroup.cs" />
     <Compile Include="ObjectRelational\CriteriaGroupOperator.cs" />
     <Compile Include="ObjectRelational\CriteriaOperator.cs" />
+    <Compile Include="ObjectRelational\IQueryObjectExecutor.cs" />
     <Compile Include="ObjectRelational\QueryObject.cs" />
     <Compile Include="ObjectRelational\IRepository.cs" />
     <Compile Include="ObjectRelational\IUnitOfWork.cs" />
-    <Compile Include="ObjectRelational\QueryObjectExtensions.cs" />
+    <Compile Include="ObjectRelational\SortDescripton.cs" />
+    <Compile Include="ObjectRelational\SortDirection.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

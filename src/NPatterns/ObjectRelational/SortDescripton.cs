@@ -3,28 +3,22 @@ using System.Runtime.Serialization;
 namespace NPatterns.ObjectRelational
 {
     /// <summary>
-    /// A Filter Descriptor for QueryObject
+    /// object to describe the sorting
     /// </summary>
     [DataContract]
-    public class Criteria
+    public class SortDescription
     {
         /// <summary>
-        /// filter by field
+        /// sort by field (order by this field)
         /// </summary>
-        [DataMember(Name = "field")]
+        [DataMember(Name = "sidx")]
         public string Field { get; set; }
 
         /// <summary>
-        /// filter operator
+        /// asc or desc
         /// </summary>
-        [DataMember(Name = "op")]
-        public CriteriaOperator Operator { get; set; }
-
-        /// <summary>
-        /// filter by what value, e.g. "field >= value"
-        /// </summary>
-        [DataMember(Name = "data")]
-        public object Value { get; set; }
+        [DataMember(Name = "sord")]
+        public SortDirection Direction { get; set; }
 
         /// <summary>
         /// has field or not

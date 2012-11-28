@@ -56,7 +56,7 @@ namespace NPatterns.Tests
                                  new Product {Name = null,Version = 0}
                              };
 
-            var query = new DynamicQueryObject();
+            var query = new QueryObject();
             query.Add(new Criteria { Field = "Name", Operator = CriteriaOperator.IsNotNull });
 
             var criteriaGroup = new CriteriaGroup { Operator = CriteriaGroupOperator.Or };
@@ -64,12 +64,15 @@ namespace NPatterns.Tests
             criteriaGroup.Criterias.Add(new Criteria { Field = "Name", Operator = CriteriaOperator.EndsWith, Value = "ioc" });
 
             query.Add(criteriaGroup);
+            query.Add(new SortDescription { Field = "Version", Direction = SortDirection.Ascending });
 
-            var result = query.Execute(source.AsQueryable()).ToList();
+            var executor = new DynamicQueryObjectExecutor();
+            var result = query.Execute(source.AsQueryable(), executor).ToList();
             Assert.AreEqual(2, result.Count);
+            Assert.IsTrue(result[0].Version < result[1].Version);
 
             query.Add(new Criteria { Field = "Version", Operator = CriteriaOperator.IsEqualTo, Value = 1.0 }, CriteriaGroupOperator.Or);
-            var result2 = query.Execute(source.AsQueryable()).ToList();
+            var result2 = query.Execute(source.AsQueryable(), executor).ToList();
             Assert.AreEqual(3, result2.Count);
         }
 
@@ -100,7 +103,7 @@ namespace NPatterns.Tests
                                      }
                              };
 
-            var query = new DynamicQueryObject();
+            var query = new QueryObject();
             query.Add(new Criteria { Field = "Product.Name", Operator = CriteriaOperator.IsNotNull });
 
             var criteriaGroup = new CriteriaGroup { Operator = CriteriaGroupOperator.Or };
@@ -108,12 +111,12 @@ namespace NPatterns.Tests
             criteriaGroup.Criterias.Add(new Criteria { Field = "Product.Name", Operator = CriteriaOperator.EndsWith, Value = "ioc" });
 
             query.Add(criteriaGroup);
-
-            var result = query.Execute(source.AsQueryable()).ToList();
+            var executor = new DynamicQueryObjectExecutor();
+            var result = query.Execute(source.AsQueryable(), executor).ToList();
             Assert.AreEqual(2, result.Count);
 
             query.Add(new Criteria { Field = "Product.Version", Operator = CriteriaOperator.IsEqualTo, Value = 1.0 }, CriteriaGroupOperator.Or);
-            var result2 = query.Execute(source.AsQueryable()).ToList();
+            var result2 = query.Execute(source.AsQueryable(), executor).ToList();
             Assert.AreEqual(3, result2.Count);
         }
 

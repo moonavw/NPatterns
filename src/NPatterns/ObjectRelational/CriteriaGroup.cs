@@ -10,6 +10,9 @@ namespace NPatterns.ObjectRelational
     [DataContract]
     public class CriteriaGroup
     {
+        /// <summary>
+        /// initialize a criteria group
+        /// </summary>
         public CriteriaGroup()
         {
             Criterias = new List<Criteria>();
