@@ -10,10 +10,21 @@ namespace NPatterns.ObjectRelational
     /// </summary>
     public class QueryObject
     {
+        private readonly IQueryObjectExecutor _executor;
+
         private readonly List<Tuple<CriteriaGroup, CriteriaGroupOperator>> _criteriaGroups =
             new List<Tuple<CriteriaGroup, CriteriaGroupOperator>>();
 
         private readonly List<SortDescription> _sortDescriptions = new List<SortDescription>();
+
+        /// <summary>
+        /// initialize an instance of query object with query object executor
+        /// </summary>
+        /// <param name="executor">an implement of IQueryObjectExecutor that could execute this query object</param>
+        public QueryObject(IQueryObjectExecutor executor)
+        {
+            _executor = executor;
+        }
 
         /// <summary>
         /// appended criteria groups in this Query object.
@@ -91,11 +102,10 @@ namespace NPatterns.ObjectRelational
         /// </summary>
         /// <typeparam name="T">type of the element in source</typeparam>
         /// <param name="source">queryable source to query</param>
-        /// <param name="executor">query object executor </param>
         /// <returns>queryable result</returns>
-        public IQueryable<T> Execute<T>(IQueryable<T> source, IQueryObjectExecutor executor) where T : class
+        public IQueryable<T> Execute<T>(IQueryable<T> source) where T : class
         {
-            return executor.Execute(source, this);
+            return _executor.Execute(source, this);
         }
     }
 }
