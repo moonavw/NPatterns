@@ -9,7 +9,8 @@ namespace NPatterns.ObjectRelational.EF
     /// implement the IRepository with EF
     /// </summary>
     /// <typeparam name="TEntity">type of the entity in this repository</typeparam>
-    public class Repository<TEntity> : IRepository<TEntity> where TEntity : class
+    public class Repository<TEntity> : IRepository<TEntity>
+        where TEntity : class
     {
         public Repository(DbContext context)
         {
@@ -60,6 +61,15 @@ namespace NPatterns.ObjectRelational.EF
         public void Remove(TEntity entity)
         {
             Set.Remove(entity);
+        }
+
+        #endregion
+
+        #region IDisposable Members
+
+        public void Dispose()
+        {
+            Context.Dispose();
         }
 
         #endregion

@@ -9,7 +9,8 @@ namespace NPatterns.ObjectRelational
     /// more information about this pattern see http://martinfowler.com/eaaCatalog/repository.html
     /// </summary>
     /// <typeparam name="TEntity">Type of entity for this repository </typeparam>
-    public interface IRepository<TEntity> where TEntity : class
+    public interface IRepository<TEntity> : IDisposable
+        where TEntity : class
     {
         /// <summary>
         /// Convert to IQueryable for querying

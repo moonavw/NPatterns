@@ -1,3 +1,5 @@
+using System;
+
 namespace NPatterns.ObjectRelational
 {
     /// <summary>
@@ -5,7 +7,7 @@ namespace NPatterns.ObjectRelational
     /// related info see http://martinfowler.com/eaaCatalog/unitOfWork.html or
     /// http://msdn.microsoft.com/en-us/magazine/dd882510.aspx
     /// </summary>
-    public interface IUnitOfWork
+    public interface IUnitOfWork : IDisposable
     {
         /// <summary>
         /// Commit all changes made in a container.

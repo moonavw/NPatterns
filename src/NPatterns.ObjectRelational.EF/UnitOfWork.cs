@@ -56,5 +56,14 @@ namespace NPatterns.ObjectRelational.EF
         }
 
         #endregion
+
+        #region IDisposable Members
+
+        public void Dispose()
+        {
+            Context.Dispose();
+        }
+
+        #endregion
     }
 }
