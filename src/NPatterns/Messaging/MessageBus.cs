@@ -59,6 +59,11 @@ namespace NPatterns.Messaging
 
         #endregion
 
+        public void Dispose()
+        {
+            _subscriptions.Clear();
+        }
+
         protected virtual IEnumerable<Action<T>> GetSubscribers<T>() where T : class
         {
             return (from s in _subscriptions.Values

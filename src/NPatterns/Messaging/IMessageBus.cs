@@ -5,7 +5,7 @@ namespace NPatterns.Messaging
     /// <summary>
     /// Contract for "Message bus a.k.a Event bus pattern".
     /// </summary>
-    public interface IMessageBus
+    public interface IMessageBus : IDisposable
     {
         /// <summary>
         /// register a callback for a message type.

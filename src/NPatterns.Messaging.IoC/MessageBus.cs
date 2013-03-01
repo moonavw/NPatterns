@@ -18,6 +18,8 @@ namespace NPatterns.Messaging.IoC
             foreach (var handler in handlers)
                 using (handler)
                     handler.Handle(message);
+
+            base.Publish(message);
         }
         public override void PublishAsync<T>(T message)
         {
@@ -32,6 +34,8 @@ namespace NPatterns.Messaging.IoC
                                                   handler1.Handle((T)p);
                                           }, message);
             }
+
+            base.PublishAsync(message);
         }
     }
 }
