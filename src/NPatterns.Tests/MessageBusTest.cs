@@ -27,9 +27,8 @@ namespace NPatterns.Tests
 
             //register a handler in bus, and dispose after published.
             using (bus.Subscribe<TestMessage>(m => m.HandledBy.Add("anonymous handler")))
-            {
                 bus.Publish(msg);
-            }
+
             Assert.IsTrue(msg.Handled); //handled by that handler
 
             msg.HandledBy.Clear(); //reset
@@ -37,9 +36,8 @@ namespace NPatterns.Tests
             //OR you may register a handler like this:
             var handler = new PrimaryTestMessageHandler();
             using (bus.Subscribe(handler))
-            {
                 bus.Publish(msg);
-            }
+
             Assert.IsTrue(msg.Handled); //handled by that handler
 
             msg.HandledBy.Clear(); //reset
@@ -69,16 +67,16 @@ namespace NPatterns.Tests
             IMessageBus bus = kernel.Get<IMessageBus>();
 
             var msg = new TestMessage();
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
+            Stopwatch sw = Stopwatch.StartNew();
             bus.Publish(msg);
             sw.Stop();
             Console.WriteLine(sw.ElapsedMilliseconds);
             Assert.IsTrue(msg.Handled);
 
-            Assert.AreEqual(typeof(TertiaryTestMessageHandler).Name, msg.HandledBy[0]);
-            Assert.AreEqual(typeof(PrimaryTestMessageHandler).Name, msg.HandledBy[1]);
-            Assert.AreEqual(typeof(SecondaryTestMessageHandler).Name, msg.HandledBy[2]);
+            //also handled sequentially
+            Assert.AreEqual(typeof(PrimaryTestMessageHandler).Name, msg.HandledBy[0]);
+            Assert.AreEqual(typeof(SecondaryTestMessageHandler).Name, msg.HandledBy[1]);
+            Assert.AreEqual(typeof(TertiaryTestMessageHandler).Name, msg.HandledBy[2]);
         }
 
         [TestMethod]
@@ -100,17 +98,15 @@ namespace NPatterns.Tests
                                    new PrimaryTestMessageHandler()
                                };
 
-            for (int i = 0; i < handlers.Count; i++)
-            {
-                bus.Subscribe(handlers[i], i);
-            }
-
+            foreach (var t in handlers)
+                bus.Subscribe(t);
 
             bus.Publish(msg);
-            for (int i = 0; i < handlers.Count; i++)
-            {
-                Assert.AreEqual(handlers[i].GetType().Name, msg.HandledBy[i]);
-            }
+
+            var orderedHandlers = handlers.OrderBy(z => z.Order).ToList();
+            for (int i = 0; i < orderedHandlers.Count; i++)
+                Assert.AreEqual(orderedHandlers[i].GetType().Name, msg.HandledBy[i]);
+            
             Assert.AreEqual("anonymous1", msg.HandledBy[3]);
             Assert.AreEqual("anonymous2", msg.HandledBy[4]);
         }
@@ -137,35 +133,27 @@ namespace NPatterns.Tests
 
             var msg = new TestMessage();
 
-            bus.Subscribe<TestMessage>(m =>
-                                           {
-                                               Thread.Sleep(300);
-                                               m.HandledBy.Add("anonymous handler1");
-                                           });
-            bus.Subscribe<TestMessage>(m =>
-                                           {
-                                               Thread.Sleep(200);
-                                               m.HandledBy.Add("anonymous handler2");
-                                           });
+            bus.Subscribe<TestMessage>(m => m.HandledBy.Add("anonymous handler1"));
+            bus.Subscribe<TestMessage>(m => m.HandledBy.Add("anonymous handler2"));
             bus.Subscribe<TestMessage>(m =>
                                            {
                                                Thread.Sleep(100);
                                                m.HandledBy.Add("anonymous handler3");
                                            });
 
-            Stopwatch sw = new Stopwatch();
-            sw.Start();
+            Stopwatch sw = Stopwatch.StartNew();
             bus.PublishAsync(msg);
             sw.Stop();
             Assert.IsTrue(sw.ElapsedMilliseconds < 100);
 
             sw.Restart();
-            do
-                Thread.Sleep(100);
-            while (msg.HandledBy.Count < 3);
+               
+            while (msg.HandledBy.Count < 3)
+                 Thread.Sleep(50);
 
             sw.Stop();
-            Assert.AreEqual(300, sw.ElapsedMilliseconds, 100);
+            //must close to the max sleeping timespan
+            Assert.IsTrue(sw.ElapsedMilliseconds<= 150);
         }
 
         #region Nested type: PrimaryTestMessageHandler
@@ -174,12 +162,19 @@ namespace NPatterns.Tests
         {
             #region IHandler<TestMessage> Members
 
+            public int Order { get { return 0; } }
+
             public void Handle(TestMessage message)
             {
                 message.HandledBy.Add(GetType().Name);
             }
 
             #endregion
+
+            public void Dispose()
+            {
+
+            }
         }
 
         #endregion
@@ -190,12 +185,19 @@ namespace NPatterns.Tests
         {
             #region IHandler<TestMessage> Members
 
+            public int Order { get { return 1; } }
+
             public void Handle(TestMessage message)
             {
                 message.HandledBy.Add(GetType().Name);
             }
 
             #endregion
+
+            public void Dispose()
+            {
+
+            }
         }
 
         #endregion
@@ -206,12 +208,19 @@ namespace NPatterns.Tests
         {
             #region IHandler<TestMessage> Members
 
+            public int Order { get { return 2; } }
+
             public void Handle(TestMessage message)
             {
                 message.HandledBy.Add(GetType().Name);
             }
 
             #endregion
+
+            public void Dispose()
+            {
+
+            }
         }
 
         #endregion

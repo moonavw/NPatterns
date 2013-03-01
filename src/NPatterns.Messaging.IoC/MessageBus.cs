@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.Practices.ServiceLocation;
 
 namespace NPatterns.Messaging.IoC
@@ -10,13 +11,27 @@ namespace NPatterns.Messaging.IoC
     /// </summary>
     public class MessageBus : Messaging.MessageBus, IMessageBus
     {
-        protected override IEnumerable<Action<T>> GetSubscribers<T>()
+        public override void Publish<T>(T message)
         {
-            var handlers = ServiceLocator.Current.GetAllInstances<IHandler<T>>().ToList();
+            var handlers = ServiceLocator.Current.GetAllInstances<IHandler<T>>().OrderBy(z => z.Order);
 
-            var subscribers = handlers.Select(h => (Action<T>)h.Handle).ToList();
-            subscribers.AddRange(base.GetSubscribers<T>());
-            return subscribers;
+            foreach (var handler in handlers)
+                using (handler)
+                    handler.Handle(message);
+        }
+        public override void PublishAsync<T>(T message)
+        {
+            var handlers = ServiceLocator.Current.GetAllInstances<IHandler<T>>().OrderBy(z => z.Order);
+
+            foreach (var handler in handlers)
+            {
+                IHandler<T> handler1 = handler;
+                Task.Factory.StartNew(p =>
+                                          {
+                                              using (handler1)
+                                                  handler1.Handle((T)p);
+                                          }, message);
+            }
         }
     }
 }

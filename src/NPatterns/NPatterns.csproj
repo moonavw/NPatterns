@@ -54,7 +54,6 @@
     <Compile Include="IHandler.cs" />
     <Compile Include="Messaging\IMessageBus.cs" />
     <Compile Include="Messaging\MessageBus.cs" />
-    <Compile Include="Messaging\MessageBusExtensions.cs" />
     <Compile Include="ObjectRelational\Criteria.cs" />
     <Compile Include="ObjectRelational\CriteriaGroup.cs" />
     <Compile Include="ObjectRelational\CriteriaGroupOperator.cs" />

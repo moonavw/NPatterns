@@ -33,7 +33,12 @@ namespace NPatterns.Messaging
                                     });
         }
 
-        public void Publish<T>(T message) where T : class
+        public IDisposable Subscribe<T>(IHandler<T> handler) where T : class
+        {
+            return Subscribe((Action<T>)handler.Handle, handler.Order);
+        }
+
+        public virtual void Publish<T>(T message) where T : class
         {
             var subscribers = GetSubscribers<T>();
 
@@ -41,7 +46,7 @@ namespace NPatterns.Messaging
                 callback(message);
         }
 
-        public void PublishAsync<T>(T message) where T : class
+        public virtual void PublishAsync<T>(T message) where T : class
         {
             var subscribers = GetSubscribers<T>();
 
@@ -68,14 +73,12 @@ namespace NPatterns.Messaging
         {
             public Subscription(Type messageType, Delegate onMessagePublished, int? order = null)
             {
-                Timestamp = DateTime.Now;
                 MessageType = messageType;
                 OnMessagePublished = onMessagePublished;
 
-                Order = order ?? Timestamp.Ticks;
+                Order = order ?? DateTime.Now.Ticks;
             }
 
-            public DateTime Timestamp { get; private set; }
             public Type MessageType { get; private set; }
             public Delegate OnMessagePublished { get; private set; }
             public long Order { get; private set; }

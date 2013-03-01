@@ -18,6 +18,15 @@ namespace NPatterns.Messaging
         IDisposable Subscribe<T>(Action<T> callback, int? order = null) where T : class;
 
         /// <summary>
+        /// register a callback for a message type.
+        /// the callback will be invoked when the message published on bus
+        /// </summary>
+        /// <typeparam name="T">type of message</typeparam>
+        /// <param name="handler">handler that handle message</param>
+        /// <returns>disposer to remove the callback from bus</returns>
+        IDisposable Subscribe<T>(IHandler<T> handler) where T : class;
+
+        /// <summary>
         /// publish a message on bus.
         /// all matched registered callback will handle this message
         /// </summary>
