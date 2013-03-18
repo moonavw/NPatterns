@@ -11,31 +11,33 @@ namespace NPatterns.Messaging.IoC
     /// </summary>
     public class MessageBus : Messaging.MessageBus, IMessageBus
     {
-        public override void Publish<T>(T message)
+        public override bool Publish<T>(T message)
         {
-            var handlers = ServiceLocator.Current.GetAllInstances<IHandler<T>>().OrderBy(z => z.Order);
+            var handlers = ServiceLocator.Current.GetAllInstances<IHandler<T>>().OrderBy(z => z.Order).ToList();
 
             foreach (var handler in handlers)
-                using (handler)
-                    handler.Handle(message);
+                handler.Handle(message);
 
-            base.Publish(message);
+            return base.Publish(message) || handlers.Count > 0;
         }
-        public override void PublishAsync<T>(T message)
+        public override bool PublishAsync<T>(T message, Action callbackOnAllDone = null, Action callbackOnAnyDone = null)
         {
-            var handlers = ServiceLocator.Current.GetAllInstances<IHandler<T>>().OrderBy(z => z.Order);
+            var handlers = ServiceLocator.Current.GetAllInstances<IHandler<T>>().OrderBy(z => z.Order).ToList();
+
+            StartHandlingCount(message.GetHashCode(), handlers.Count + GetSubscribers<T>().Count());
 
             foreach (var handler in handlers)
             {
                 IHandler<T> handler1 = handler;
                 Task.Factory.StartNew(p =>
                                           {
-                                              using (handler1)
-                                                  handler1.Handle((T)p);
+                                              handler1.Handle((T)p);
+                                              //callback for this handler done
+                                              UpdateHandlingCount(p.GetHashCode(), callbackOnAllDone, callbackOnAnyDone);
                                           }, message);
             }
 
-            base.PublishAsync(message);
+            return base.PublishAsync(message, callbackOnAllDone, callbackOnAnyDone) || handlers.Count > 0;
         }
     }
 }

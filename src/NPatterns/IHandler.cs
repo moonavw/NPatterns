@@ -6,7 +6,7 @@ namespace NPatterns
     /// A handler could handle a specified message, like command, event, request etc
     /// </summary>
     /// <typeparam name="T">type of the message</typeparam>
-    public interface IHandler<in T> : IDisposable
+    public interface IHandler<in T>
         where T : class
     {
         /// <summary>

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -12,10 +13,12 @@ namespace NPatterns.Messaging
     public class MessageBus : IMessageBus
     {
         private readonly ConcurrentDictionary<int, Subscription> _subscriptions;
+        private readonly ConcurrentDictionary<int, HandlingCounter> _handlingCounters;
 
         public MessageBus()
         {
             _subscriptions = new ConcurrentDictionary<int, Subscription>();
+            _handlingCounters = new ConcurrentDictionary<int, HandlingCounter>();
         }
 
         #region IMessageBus Members
@@ -38,26 +41,61 @@ namespace NPatterns.Messaging
             return Subscribe((Action<T>)handler.Handle, handler.Order);
         }
 
-        public virtual void Publish<T>(T message) where T : class
+        public virtual bool Publish<T>(T message) where T : class
         {
-            var subscribers = GetSubscribers<T>();
+            var subscribers = GetSubscribers<T>().ToList();
 
             foreach (var callback in subscribers)
                 callback(message);
+
+            return subscribers.Count > 0;
         }
 
-        public virtual void PublishAsync<T>(T message) where T : class
+        public virtual bool PublishAsync<T>(T message, Action callbackOnAllDone = null, Action callbackOnAnyDone = null) where T : class
         {
-            var subscribers = GetSubscribers<T>();
+            var subscribers = GetSubscribers<T>().ToList();
+
+            StartHandlingCount(message.GetHashCode(), subscribers.Count);
 
             foreach (var callback in subscribers)
             {
                 Action<T> action = callback;
-                Task.Factory.StartNew(o => action((T)o), message);
+                Task.Factory.StartNew(p =>
+                                          {
+                                              action((T)p);
+                                              //callback for this handler done
+                                              UpdateHandlingCount(p.GetHashCode(), callbackOnAllDone, callbackOnAnyDone);
+                                          }, message);
             }
+
+            return subscribers.Count > 0;
         }
 
         #endregion
+
+        protected virtual void StartHandlingCount(int key, int maxCount)
+        {
+            _handlingCounters.TryAdd(key, new HandlingCounter(maxCount));
+        }
+        protected virtual void UpdateHandlingCount(int key, Action callbackOnAllDone, Action callbackOnAnyDone)
+        {
+            if (callbackOnAnyDone != null)
+                callbackOnAnyDone();
+
+            HandlingCounter counter;
+            if (_handlingCounters.TryGetValue(key, out counter))
+            {
+                counter.Increment();
+                Debug.WriteLine("progress: {0}/{1}", counter.CurrentCount, counter.MaxCount);
+                if (counter.IsCompleted)
+                {
+                    _handlingCounters.TryRemove(key, out counter);
+
+                    if (callbackOnAllDone != null)
+                        callbackOnAllDone();
+                }
+            }
+        }
 
         public void Dispose()
         {
@@ -95,5 +133,41 @@ namespace NPatterns.Messaging
         }
 
         #endregion
+
+        private class HandlingCounter
+        {
+            private readonly int _expectedValue;
+            private int _actualValue;
+
+            public HandlingCounter(int maxCount)
+            {
+                _expectedValue = maxCount;
+            }
+
+            public int MaxCount
+            {
+                get { return _expectedValue; }
+            }
+
+            public int CurrentCount
+            {
+                get { return _actualValue; }
+            }
+
+            public bool IsCompleted
+            {
+                get { return _actualValue >= _expectedValue; }
+            }
+
+            public void Increment()
+            {
+                System.Threading.Interlocked.Increment(ref _actualValue);
+            }
+
+            public override string ToString()
+            {
+                return string.Format("progress: {0}/{1}", _actualValue, _expectedValue);
+            }
+        }
     }
 }

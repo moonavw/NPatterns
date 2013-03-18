@@ -18,8 +18,8 @@ namespace NPatterns.Messaging
         IDisposable Subscribe<T>(Action<T> callback, int? order = null) where T : class;
 
         /// <summary>
-        /// register a callback for a message type.
-        /// the callback will be invoked when the message published on bus
+        /// register a handler for a message type.
+        /// the hanlder will be invoked when the message published on bus
         /// </summary>
         /// <typeparam name="T">type of message</typeparam>
         /// <param name="handler">handler that handle message</param>
@@ -28,18 +28,22 @@ namespace NPatterns.Messaging
 
         /// <summary>
         /// publish a message on bus.
-        /// all matched registered callback will handle this message
+        /// all matched registered/hanlder callback will handle this message
         /// </summary>
         /// <typeparam name="T">type of message</typeparam>
         /// <param name="message">message</param>
-        void Publish<T>(T message) where T : class;
+        /// <returns>true if any subscriber process the message, false if no subscriber process it</returns>
+        bool Publish<T>(T message) where T : class;
 
         /// <summary>
         /// publish a message on bus.
-        /// all matched registered callback will handle this message asynchronously
+        /// all matched registered callback/hanlder will handle this message asynchronously
         /// </summary>
         /// <typeparam name="T">type of message</typeparam>
         /// <param name="message">message</param>
-        void PublishAsync<T>(T message) where T : class;
+        /// <param name="callbackOnAllDone">a callback invoked when the message handled by all registered callback/handler</param>
+        /// <param name="callbackOnAnyDone">a callback invoked when the message handled by any registered callback/handler, so it would be invoked when each callback/handler handling the message</param>
+        /// <returns>true if any subscriber process the message, false if no subscriber process it</returns>
+        bool PublishAsync<T>(T message, Action callbackOnAllDone = null, Action callbackOnAnyDone = null) where T : class;
     }
 }
