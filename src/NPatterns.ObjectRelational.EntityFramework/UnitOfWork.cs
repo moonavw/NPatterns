@@ -1,11 +1,13 @@
 ﻿using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace NPatterns.ObjectRelational.EF
+namespace NPatterns.ObjectRelational.EntityFramework
 {
     /// <summary>
-    /// implement the IUnitOfWork with EF
+    ///     implement the IUnitOfWork with EntityFramework
     /// </summary>
     public class UnitOfWork : IUnitOfWork
     {
@@ -25,7 +27,7 @@ namespace NPatterns.ObjectRelational.EF
 
         public void CommitAndRefresh()
         {
-            bool saveFailed = false;
+            bool saveFailed;
 
             do
             {
@@ -40,8 +42,7 @@ namespace NPatterns.ObjectRelational.EF
                     saveFailed = true;
 
                     ex.Entries.ToList()
-                              .ForEach(entry => entry.OriginalValues.SetValues(entry.GetDatabaseValues()));
-
+                        .ForEach(entry => entry.OriginalValues.SetValues(entry.GetDatabaseValues()));
                 }
             } while (saveFailed);
         }
@@ -51,8 +52,23 @@ namespace NPatterns.ObjectRelational.EF
             // set all entities in change tracker 
             // as 'unchanged state'
             Context.ChangeTracker.Entries()
-                              .ToList()
-                              .ForEach(entry => entry.State = System.Data.EntityState.Unchanged);
+                .ToList()
+                .ForEach(entry => entry.State = EntityState.Unchanged);
+        }
+
+        public Task CommitAsync()
+        {
+            return Context.SaveChangesAsync();
+        }
+
+        public Task CommitAsync(CancellationToken cancellationToken)
+        {
+            return Context.SaveChangesAsync(cancellationToken);
+        }
+
+        public IRepository<TEntity> Repository<TEntity>() where TEntity : class
+        {
+            return new Repository<TEntity>(Context);
         }
 
         #endregion

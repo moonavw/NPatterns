@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using CommonServiceLocator.NinjectAdapter.Unofficial;
 using Microsoft.Practices.ServiceLocation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NPatterns.Messaging;
 using Ninject;
-using NinjectAdapter;
 
 namespace NPatterns.Tests
 {

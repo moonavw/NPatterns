@@ -1,12 +1,12 @@
-using System;
 using System.Data.Entity;
 using System.Linq;
-using System.Linq.Expressions;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace NPatterns.ObjectRelational.EF
+namespace NPatterns.ObjectRelational.EntityFramework
 {
     /// <summary>
-    /// implement the IRepository with EF
+    ///     implement the IRepository with EntityFramework
     /// </summary>
     /// <typeparam name="TEntity">type of the entity in this repository</typeparam>
     public class Repository<TEntity> : IRepository<TEntity>
@@ -19,23 +19,28 @@ namespace NPatterns.ObjectRelational.EF
         }
 
         protected DbContext Context { get; private set; }
-        protected IDbSet<TEntity> Set { get; private set; }
+        protected DbSet<TEntity> Set { get; private set; }
 
         #region IRepository<T> Members
 
-        public IQueryable<TEntity> AsQueryable()
+        public IQueryable<TEntity> Query()
         {
             return Set;
         }
 
-        public IQueryable<TEntity> FindAll(Expression<Func<TEntity, bool>> predicate)
+        public TEntity Find(params object[] keyValues)
         {
-            return Set.Where(predicate);
+            return Set.Find(keyValues);
         }
 
-        public TEntity Find(Expression<Func<TEntity, bool>> predicate)
+        public Task<TEntity> FindAsync(params object[] keyValues)
         {
-            return Set.FirstOrDefault(predicate);
+            return Set.FindAsync(keyValues);
+        }
+
+        public Task<TEntity> FindAsync(CancellationToken cancellationToken, params object[] keyValues)
+        {
+            return Set.FindAsync(cancellationToken, keyValues);
         }
 
         public void Add(TEntity entity)
@@ -45,7 +50,7 @@ namespace NPatterns.ObjectRelational.EF
 
         public void Modify(TEntity entity)
         {
-            Context.Entry(entity).State = System.Data.EntityState.Modified;
+            Context.Entry(entity).State = EntityState.Modified;
         }
 
         public void Track(TEntity entity)
