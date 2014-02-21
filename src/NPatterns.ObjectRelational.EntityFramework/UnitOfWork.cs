@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace NPatterns.ObjectRelational.EntityFramework
 {
     /// <summary>
-    ///     implement the IUnitOfWork with EntityFramework
+    /// implement the IUnitOfWork with EntityFramework
     /// </summary>
     public class UnitOfWork : IUnitOfWork
     {
@@ -64,11 +64,6 @@ namespace NPatterns.ObjectRelational.EntityFramework
         public Task CommitAsync(CancellationToken cancellationToken)
         {
             return Context.SaveChangesAsync(cancellationToken);
-        }
-
-        public IRepository<TEntity> Repository<TEntity>() where TEntity : class
-        {
-            return new Repository<TEntity>(Context);
         }
 
         #endregion

@@ -5,51 +5,44 @@ using System.Threading.Tasks;
 namespace NPatterns.ObjectRelational
 {
     /// <summary>
-    ///     Contract for "UnitOfWork pattern". For more
-    ///     related info see http://martinfowler.com/eaaCatalog/unitOfWork.html or
-    ///     http://msdn.microsoft.com/en-us/magazine/dd882510.aspx
+    /// Contract for "UnitOfWork pattern". For more
+    /// related info see http://martinfowler.com/eaaCatalog/unitOfWork.html or
+    /// http://msdn.microsoft.com/en-us/magazine/dd882510.aspx
     /// </summary>
     public interface IUnitOfWork : IDisposable
     {
         /// <summary>
-        ///     Commit all changes made in a container.
+        /// Commit all changes made in a container.
         /// </summary>
         /// <remarks>
-        ///     If the entity have fixed properties and any optimistic concurrency problem exists,
-        ///     then an exception is thrown
+        /// If the entity have fixed properties and any optimistic concurrency problem exists,
+        /// then an exception is thrown
         /// </remarks>
         void Commit();
 
         /// <summary>
-        ///     Commit all changes made in a container.
+        /// Commit all changes made in a container.
         /// </summary>
         /// <remarks>
-        ///     If the entity have fixed properties and any optimistic concurrency problem exists,
-        ///     then 'client changes' are refreshed - Client wins
+        /// If the entity have fixed properties and any optimistic concurrency problem exists,
+        /// then 'client changes' are refreshed - Client wins
         /// </remarks>
         void CommitAndRefresh();
 
         /// <summary>
-        ///     Rollback tracked changes. See references of UnitOfWork pattern
+        /// Rollback tracked changes. See references of UnitOfWork pattern
         /// </summary>
         void Rollback();
 
         /// <summary>
-        ///     async Commit all changes made in a container.
+        /// async Commit all changes made in a container.
         /// </summary>
         Task CommitAsync();
 
         /// <summary>
-        ///     async Commit all changes made in a container.
+        /// async Commit all changes made in a container.
         /// </summary>
         /// <param name="cancellationToken">token to cancel this commit</param>
         Task CommitAsync(CancellationToken cancellationToken);
-
-        /// <summary>
-        ///     Get the Repository for TEntity
-        /// </summary>
-        /// <typeparam name="TEntity">Type of entity for repository</typeparam>
-        /// <returns></returns>
-        IRepository<TEntity> Repository<TEntity>() where TEntity : class;
     }
 }

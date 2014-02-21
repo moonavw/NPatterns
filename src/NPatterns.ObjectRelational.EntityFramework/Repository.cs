@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 namespace NPatterns.ObjectRelational.EntityFramework
 {
     /// <summary>
-    ///     implement the IRepository with EntityFramework
+    /// implement the IRepository with EntityFramework
     /// </summary>
     /// <typeparam name="TEntity">type of the entity in this repository</typeparam>
     public class Repository<TEntity> : IRepository<TEntity>
