@@ -8,9 +8,7 @@ namespace NPatterns.ObjectRelational
     [DataContract]
     public enum CriteriaGroupOperator
     {
-        [EnumMember(Value = "AND")]
-        And,
-        [EnumMember(Value = "OR")]
-        Or
+        [EnumMember(Value = "AND")] And,
+        [EnumMember(Value = "OR")] Or
     }
 }

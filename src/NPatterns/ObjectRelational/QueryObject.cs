@@ -10,10 +10,10 @@ namespace NPatterns.ObjectRelational
     /// </summary>
     public class QueryObject
     {
-        private readonly IQueryObjectExecutor _executor;
-
         private readonly List<Tuple<CriteriaGroup, CriteriaGroupOperator>> _criteriaGroups =
             new List<Tuple<CriteriaGroup, CriteriaGroupOperator>>();
+
+        private readonly IQueryObjectExecutor _executor;
 
         private readonly List<SortDescription> _sortDescriptions = new List<SortDescription>();
 
@@ -67,12 +67,12 @@ namespace NPatterns.ObjectRelational
         public void Add(Criteria criteria, CriteriaGroupOperator op = CriteriaGroupOperator.And)
         {
             _criteriaGroups.Add(
-                new Tuple<CriteriaGroup, CriteriaGroupOperator>(
-                    new CriteriaGroup
-                        {
-                            Criterias = new List<Criteria> { criteria }
-                        },
-                    op));
+                                new Tuple<CriteriaGroup, CriteriaGroupOperator>(
+                                    new CriteriaGroup
+                                    {
+                                        Criterias = new List<Criteria> {criteria}
+                                    },
+                                    op));
         }
 
         /// <summary>
@@ -83,9 +83,9 @@ namespace NPatterns.ObjectRelational
         public void Add(CriteriaGroup criteriaGroup, CriteriaGroupOperator op = CriteriaGroupOperator.And)
         {
             _criteriaGroups.Add(
-                new Tuple<CriteriaGroup, CriteriaGroupOperator>(
-                    criteriaGroup,
-                    op));
+                                new Tuple<CriteriaGroup, CriteriaGroupOperator>(
+                                    criteriaGroup,
+                                    op));
         }
 
         /// <summary>

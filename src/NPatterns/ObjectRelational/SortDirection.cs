@@ -8,9 +8,7 @@ namespace NPatterns.ObjectRelational
     [DataContract]
     public enum SortDirection
     {
-        [EnumMember(Value = "asc")]
-        Ascending,
-        [EnumMember(Value = "desc")]
-        Descending
+        [EnumMember(Value = "asc")] Ascending,
+        [EnumMember(Value = "desc")] Descending
     }
 }

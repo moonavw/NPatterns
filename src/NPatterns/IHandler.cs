@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace NPatterns
+﻿namespace NPatterns
 {
     /// <summary>
     /// A handler could handle a specified message, like command, event, request etc

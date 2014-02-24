@@ -1,4 +1,5 @@
-﻿using System.Data.Entity;
+﻿using System;
+using System.Data.Entity;
 using System.Data.Entity.Infrastructure;
 using System.Linq;
 using System.Threading;
@@ -22,7 +23,14 @@ namespace NPatterns.ObjectRelational.EntityFramework
 
         public void Commit()
         {
+            OnCommitting();
             Context.SaveChanges();
+        }
+
+        public Task CommitAsync()
+        {
+            OnCommitting();
+            return Context.SaveChangesAsync();
         }
 
         public void CommitAndRefresh()
@@ -33,7 +41,7 @@ namespace NPatterns.ObjectRelational.EntityFramework
             {
                 try
                 {
-                    Context.SaveChanges();
+                    Commit();
 
                     saveFailed = false;
                 }
@@ -42,7 +50,7 @@ namespace NPatterns.ObjectRelational.EntityFramework
                     saveFailed = true;
 
                     ex.Entries.ToList()
-                        .ForEach(entry => entry.OriginalValues.SetValues(entry.GetDatabaseValues()));
+                      .ForEach(entry => entry.OriginalValues.SetValues(entry.GetDatabaseValues()));
                 }
             } while (saveFailed);
         }
@@ -52,18 +60,42 @@ namespace NPatterns.ObjectRelational.EntityFramework
             // set all entities in change tracker 
             // as 'unchanged state'
             Context.ChangeTracker.Entries()
-                .ToList()
-                .ForEach(entry => entry.State = EntityState.Unchanged);
+                   .ToList()
+                   .ForEach(entry => entry.State = EntityState.Unchanged);
         }
 
-        public Task CommitAsync()
+        protected virtual void OnCommitting()
         {
-            return Context.SaveChangesAsync();
-        }
+            var toAdd = (from e in Context.ChangeTracker.Entries()
+                         where e.State == EntityState.Added && e.Entity is IAuditable
+                         select (IAuditable) e.Entity).ToList();
 
-        public Task CommitAsync(CancellationToken cancellationToken)
-        {
-            return Context.SaveChangesAsync(cancellationToken);
+            toAdd.ForEach(z =>
+            {
+                z.Created = DateTime.Now;
+                z.CreatedBy = Thread.CurrentPrincipal.Identity.Name;
+            });
+
+            var toUpdate = (from e in Context.ChangeTracker.Entries()
+                            where e.State == EntityState.Modified && e.Entity is IAuditable
+                            select (IAuditable) e.Entity).ToList();
+
+            toUpdate.ForEach(z =>
+            {
+                z.Updated = DateTime.Now;
+                z.UpdatedBy = Thread.CurrentPrincipal.Identity.Name;
+            });
+
+            var toDel = (from e in Context.ChangeTracker.Entries()
+                         where e.State == EntityState.Deleted && e.Entity is IArchivable
+                         select e).ToList();
+
+            toDel.ForEach(z =>
+            {
+                z.State = EntityState.Modified;
+                ((IArchivable) z.Entity).Deleted = DateTime.Now;
+                ((IArchivable) z.Entity).DeletedBy = Thread.CurrentPrincipal.Identity.Name;
+            });
         }
 
         #endregion

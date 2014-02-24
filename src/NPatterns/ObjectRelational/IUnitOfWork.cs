@@ -1,5 +1,4 @@
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace NPatterns.ObjectRelational
@@ -21,6 +20,11 @@ namespace NPatterns.ObjectRelational
         void Commit();
 
         /// <summary>
+        /// async Commit all changes made in a container.
+        /// </summary>
+        Task CommitAsync();
+
+        /// <summary>
         /// Commit all changes made in a container.
         /// </summary>
         /// <remarks>
@@ -33,16 +37,5 @@ namespace NPatterns.ObjectRelational
         /// Rollback tracked changes. See references of UnitOfWork pattern
         /// </summary>
         void Rollback();
-
-        /// <summary>
-        /// async Commit all changes made in a container.
-        /// </summary>
-        Task CommitAsync();
-
-        /// <summary>
-        /// async Commit all changes made in a container.
-        /// </summary>
-        /// <param name="cancellationToken">token to cancel this commit</param>
-        Task CommitAsync(CancellationToken cancellationToken);
     }
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace NPatterns.ObjectRelational
@@ -32,14 +31,6 @@ namespace NPatterns.ObjectRelational
         /// <param name="keyValues">primary key values</param>
         /// <returns>entity</returns>
         Task<TEntity> FindAsync(params object[] keyValues);
-
-        /// <summary>
-        /// async Find an entity by primary key values
-        /// </summary>
-        /// <param name="cancellationToken">token to cancel this query</param>
-        /// <param name="keyValues">primary key values</param>
-        /// <returns>entity</returns>
-        Task<TEntity> FindAsync(CancellationToken cancellationToken, params object[] keyValues);
 
         /// <summary>
         /// Add entity into repository

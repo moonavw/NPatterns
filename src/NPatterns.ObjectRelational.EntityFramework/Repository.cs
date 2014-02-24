@@ -1,6 +1,5 @@
 using System.Data.Entity;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace NPatterns.ObjectRelational.EntityFramework
@@ -36,11 +35,6 @@ namespace NPatterns.ObjectRelational.EntityFramework
         public Task<TEntity> FindAsync(params object[] keyValues)
         {
             return Set.FindAsync(keyValues);
-        }
-
-        public Task<TEntity> FindAsync(CancellationToken cancellationToken, params object[] keyValues)
-        {
-            return Set.FindAsync(cancellationToken, keyValues);
         }
 
         public void Add(TEntity entity)

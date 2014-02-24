@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace NPatterns.Messaging
@@ -12,8 +13,8 @@ namespace NPatterns.Messaging
     /// </summary>
     public class MessageBus : IMessageBus
     {
-        private readonly ConcurrentDictionary<int, Subscription> _subscriptions;
         private readonly ConcurrentDictionary<int, HandlingCounter> _handlingCounters;
+        private readonly ConcurrentDictionary<int, Subscription> _subscriptions;
 
         public MessageBus()
         {
@@ -25,20 +26,20 @@ namespace NPatterns.Messaging
 
         public IDisposable Subscribe<T>(Action<T> callback, int? order = null) where T : class
         {
-            var subscription = new Subscription(typeof(T), callback, order);
+            var subscription = new Subscription(typeof (T), callback, order);
             int key = subscription.Key;
             _subscriptions.TryAdd(key, subscription);
 
             return new Disposer(() =>
-                                    {
-                                        Subscription item;
-                                        _subscriptions.TryRemove(key, out item);
-                                    });
+            {
+                Subscription item;
+                _subscriptions.TryRemove(key, out item);
+            });
         }
 
         public IDisposable Subscribe<T>(IHandler<T> handler) where T : class
         {
-            return Subscribe((Action<T>)handler.Handle, handler.Order);
+            return Subscribe((Action<T>) handler.Handle, handler.Order);
         }
 
         public virtual bool Publish<T>(T message) where T : class
@@ -61,11 +62,11 @@ namespace NPatterns.Messaging
             {
                 Action<T> action = callback;
                 Task.Factory.StartNew(p =>
-                                          {
-                                              action((T)p);
-                                              //callback for this handler done
-                                              UpdateHandlingCount(p.GetHashCode(), callbackOnAllDone, callbackOnAnyDone);
-                                          }, message);
+                {
+                    action((T) p);
+                    //callback for this handler done
+                    UpdateHandlingCount(p.GetHashCode(), callbackOnAllDone, callbackOnAnyDone);
+                }, message);
             }
 
             return subscribers.Count > 0;
@@ -73,10 +74,16 @@ namespace NPatterns.Messaging
 
         #endregion
 
+        public void Dispose()
+        {
+            _subscriptions.Clear();
+        }
+
         protected virtual void StartHandlingCount(int key, int maxCount)
         {
             _handlingCounters.TryAdd(key, new HandlingCounter(maxCount));
         }
+
         protected virtual void UpdateHandlingCount(int key, Action callbackOnAllDone, Action callbackOnAnyDone)
         {
             if (callbackOnAnyDone != null)
@@ -97,17 +104,12 @@ namespace NPatterns.Messaging
             }
         }
 
-        public void Dispose()
-        {
-            _subscriptions.Clear();
-        }
-
         protected virtual IEnumerable<Action<T>> GetSubscribers<T>() where T : class
         {
             return (from s in _subscriptions.Values
-                    where s.MessageType == typeof(T)
+                    where s.MessageType == typeof (T)
                     orderby s.Order ascending
-                    select (Action<T>)s.OnMessagePublished).ToList();
+                    select (Action<T>) s.OnMessagePublished).ToList();
         }
 
         #region Nested type: Subscription
@@ -161,7 +163,7 @@ namespace NPatterns.Messaging
 
             public void Increment()
             {
-                System.Threading.Interlocked.Increment(ref _actualValue);
+                Interlocked.Increment(ref _actualValue);
             }
 
             public override string ToString()
