@@ -7,5 +7,7 @@ namespace NPatterns.ObjectRelational
         DateTime? Deleted { get; set; }
 
         string DeletedBy { get; set; }
+
+        //TODO: ArchiveKey for recovery this when creating same one
     }
 }

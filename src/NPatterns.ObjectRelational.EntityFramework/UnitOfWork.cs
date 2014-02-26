@@ -68,22 +68,30 @@ namespace NPatterns.ObjectRelational.EntityFramework
         {
             var toAdd = (from e in Context.ChangeTracker.Entries()
                          where e.State == EntityState.Added && e.Entity is IAuditable
-                         select (IAuditable) e.Entity).ToList();
+                         select e).ToList();
 
             toAdd.ForEach(z =>
             {
-                z.Created = DateTime.Now;
-                z.CreatedBy = Thread.CurrentPrincipal.Identity.Name;
+                ((IAuditable) z.Entity).Created = DateTime.Now;
+                ((IAuditable) z.Entity).CreatedBy = Thread.CurrentPrincipal.Identity.Name;
+
+                //readonly for updated audit
+                ((IAuditable) z.Entity).Updated = null;
+                ((IAuditable) z.Entity).UpdatedBy = null;
             });
 
             var toUpdate = (from e in Context.ChangeTracker.Entries()
                             where e.State == EntityState.Modified && e.Entity is IAuditable
-                            select (IAuditable) e.Entity).ToList();
+                            select e).ToList();
 
             toUpdate.ForEach(z =>
             {
-                z.Updated = DateTime.Now;
-                z.UpdatedBy = Thread.CurrentPrincipal.Identity.Name;
+                //readonly for created audit
+                z.Property("Created").IsModified = false;
+                z.Property("CreatedBy").IsModified = false;
+
+                ((IAuditable) z.Entity).Updated = DateTime.Now;
+                ((IAuditable) z.Entity).UpdatedBy = Thread.CurrentPrincipal.Identity.Name;
             });
 
             var toDel = (from e in Context.ChangeTracker.Entries()
@@ -95,6 +103,14 @@ namespace NPatterns.ObjectRelational.EntityFramework
                 z.State = EntityState.Modified;
                 ((IArchivable) z.Entity).Deleted = DateTime.Now;
                 ((IArchivable) z.Entity).DeletedBy = Thread.CurrentPrincipal.Identity.Name;
+                if (z.Entity is IAuditable)
+                {
+                    //readonly for audit
+                    z.Property("Created").IsModified = false;
+                    z.Property("CreatedBy").IsModified = false;
+                    z.Property("Updated").IsModified = false;
+                    z.Property("UpdatedBy").IsModified = false;
+                }
             });
         }
 
