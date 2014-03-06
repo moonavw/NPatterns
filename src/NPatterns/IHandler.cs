@@ -1,4 +1,6 @@
-﻿namespace NPatterns
+﻿using System.Threading.Tasks;
+
+namespace NPatterns
 {
     /// <summary>
     /// A handler could handle a specified message, like command, event, request etc
@@ -8,14 +10,15 @@
         where T : class
     {
         /// <summary>
-        /// handlers for the same kind of message would handle it by the order
-        /// </summary>
-        int Order { get; }
-
-        /// <summary>
         /// Handle the message
         /// </summary>
         /// <param name="message">message to be handled</param>
         void Handle(T message);
+
+        /// <summary>
+        /// Async Handle the message
+        /// </summary>
+        /// <param name="message">message to be handled</param>
+        Task HandleAsync(T message);
     }
 }
