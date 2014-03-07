@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using CommonServiceLocator.NinjectAdapter.Unofficial;
-using Microsoft.Practices.ServiceLocation;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NPatterns.Messaging;
 using Ninject;
@@ -43,11 +41,9 @@ namespace NPatterns.Tests
         {
             IKernel kernel = new StandardKernel();
 
-            //inital service locator
-            ServiceLocator.SetLocatorProvider(() => new NinjectServiceLocator(kernel));
-
-            //we can also use IoC, instead of "new IocMessageBus()"
-            kernel.Bind<IMessageBus>().To<Messaging.IoC.IocMessageBus>().InSingletonScope(); //make it singleton
+            //setup handler factory
+            kernel.Bind<Func<Type, IEnumerable<object>>>().ToMethod(ctx => (type) => ctx.Kernel.GetAll(type));
+            kernel.Bind<IMessageBus>().To<MessageBusEx>().InSingletonScope(); //make it singleton
 
             var msg = new TestMessage();
 
@@ -80,13 +76,14 @@ namespace NPatterns.Tests
         {
             IKernel kernel = new StandardKernel();
 
-            //inital service locator
-            ServiceLocator.SetLocatorProvider(() => new NinjectServiceLocator(kernel));
+            //setup handler factory
+            kernel.Bind<Func<Type, IEnumerable<object>>>().ToMethod(ctx => (type) => ctx.Kernel.GetAll(type));
+            kernel.Bind<IMessageBus>().To<MessageBusEx>().InSingletonScope(); //make it singleton
 
             var msg = new TestMessage();
 
             //get instance of bus
-            IMessageBus bus = new Messaging.IoC.IocMessageBus();
+            IMessageBus bus = kernel.Get<IMessageBus>();
 
             //specify an order for anonymous handler
             bus.Subscribe<TestMessage>(m => m.HandledBy.Add("anonymous1"));
@@ -137,17 +134,18 @@ namespace NPatterns.Tests
         [TestMethod]
         public void TestIocPublishAsync()
         {
-            //test ioc bus
-            IMessageBus bus = new Messaging.IoC.IocMessageBus();
-
             IKernel kernel = new StandardKernel();
 
-            //inital service locator
-            ServiceLocator.SetLocatorProvider(() => new NinjectServiceLocator(kernel));
+            //setup handler factory
+            kernel.Bind<Func<Type, IEnumerable<object>>>().ToMethod(ctx => (type) => ctx.Kernel.GetAll(type));
+            kernel.Bind<IMessageBus>().To<MessageBusEx>().InSingletonScope(); //make it singleton
 
             kernel.Bind<IHandler<TestMessage>>().To<TertiaryTestMessageHandler>();
             kernel.Bind<IHandler<TestMessage>>().To<PrimaryTestMessageHandler>();
             kernel.Bind<IHandler<TestMessage>>().To<SecondaryTestMessageHandler>();
+
+            //test ioc bus
+            IMessageBus bus = kernel.Get<IMessageBus>();
 
             bus.Subscribe<TestMessage>(m => m.HandledBy.Add("anonymous handler1"));
             bus.Subscribe<TestMessage>(m => m.HandledBy.Add("anonymous handler2"));

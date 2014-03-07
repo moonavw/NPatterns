@@ -13,7 +13,12 @@ namespace NPatterns.Messaging
     /// </summary>
     public class MessageBus : IMessageBus
     {
-        private readonly List<Delegate> _subscriptions = new List<Delegate>();
+        private readonly List<Delegate> _subscriptions;
+
+        public MessageBus()
+        {
+            _subscriptions = new List<Delegate>();
+        }
 
         #region IMessageBus Members
 
@@ -25,18 +30,15 @@ namespace NPatterns.Messaging
 
         public virtual void Publish<T>(T message) where T : class
         {
-            var subscribers = GetSubscribers<T>().ToList();
-
-            foreach (var callback in subscribers)
+            foreach (var callback in GetCallbacks<T>())
                 callback(message);
         }
 
         public virtual Task PublishAsync<T>(T message) where T : class
         {
-            var subscribers = GetSubscribers<T>().ToList();
+            var tasks = from callback in GetCallbacks<T>()
+                        select Task.Run(() => callback(message));
 
-            var tasks = (from callback in subscribers
-                         select Task.Run(() => callback(message))).ToArray();
             return Task.WhenAll(tasks);
         }
 
@@ -51,7 +53,7 @@ namespace NPatterns.Messaging
 
         #endregion
 
-        protected virtual IEnumerable<Action<T>> GetSubscribers<T>() where T : class
+        private IEnumerable<Action<T>> GetCallbacks<T>() where T : class
         {
             return from s in _subscriptions
                    where s is Action<T>
