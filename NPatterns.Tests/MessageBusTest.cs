@@ -14,7 +14,7 @@ namespace NPatterns.Tests
     public class MessageBusTest
     {
         [TestMethod]
-        public void TestBasicMessageBus()
+        public void TestMessageBus()
         {
             IMessageBus bus = new MessageBus();
 
@@ -37,7 +37,7 @@ namespace NPatterns.Tests
         }
 
         [TestMethod]
-        public void TestIocMessageBus()
+        public void TestMessageBusEx()
         {
             IKernel kernel = new StandardKernel();
 
@@ -128,11 +128,11 @@ namespace NPatterns.Tests
             Task.WaitAll(task);
             sw.Stop();
             Assert.AreEqual(3, msg.HandledBy.Count);
-            Assert.IsTrue(sw.ElapsedMilliseconds <= 200);
+            Assert.IsTrue(sw.ElapsedMilliseconds >= 100);
         }
 
         [TestMethod]
-        public void TestIocPublishAsync()
+        public void TestExPublishAsync()
         {
             IKernel kernel = new StandardKernel();
 
@@ -166,7 +166,7 @@ namespace NPatterns.Tests
             Task.WaitAll(task);
             sw.Stop();
             Assert.AreEqual(6, msg.HandledBy.Count);
-            Assert.IsTrue(sw.ElapsedMilliseconds <= 200);
+            Assert.IsTrue(sw.ElapsedMilliseconds >= 100);
         }
 
         #region Nested type: PrimaryTestMessageHandler
