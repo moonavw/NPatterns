@@ -1,20 +1,19 @@
+# What is it
 NPatterns is a collection of patterns often used in .NET projects, such as patterns of eaa.
 
-# How to get it
+## How to get it
 * from github
 * from nuget: by searching the Name "NPatterns"
 
-# Assemblies
+## Assemblies
 * NPatterns: defines the contracts of patterns, like interface, base class, and basic implementations without any other dependencies.
 * NPatterns.XXX: implement some patterns with specified dependencies.
 
 # Patterns implemented:
 ## MessageBus (a.k.a EventBus)
-
-### 1. Basic implementation
 NPatterns.Messaging.MessageBus, NPatterns
 
-follow steps showing how to use it.
+### 1. without Hanlder Factory
 
 #### 1.1. define a message
     public class UserCreatedEvent //UserName,Email etc;
@@ -38,17 +37,14 @@ then registered handler of previous step would be invoked
     var aMessage=new UserCreatedEvent{UserName="abc",Email="abc@abc.com"};
     Bus.Publish<UserCreatedEvent>(aMessage);
 
-### 2. Implementation with Hanlder Factory
-NPatterns.Messaging.MessageBusEx, NPatterns
-
-follow steps showing how to use it
+### 2. with Hanlder Factory
 
 #### 2.1. define a message (as same as above)
 
-#### 2.2. initial a bus with handler factory
-    //Ninject
-    kernel.Bind<Func<Type, IEnumerable<object>>>().ToMethod(ctx => (type) => ctx.Kernel.GetAll(type));//register the factory: Func<Type, IEnumerable<object>>
-    kernel.Bind<IMessageBus>().To<MessageBusEx>().InSingletonScope(); //make it singleton
+#### 2.2. initial a bus with handler factory    
+    kernel.Bind<IMessageBus>() //Ninject
+	  .ToConstructor(ctorArg => new MessageBus(type => ctorArg.Context.Kernel.GetAll(type))) //setup handler factory
+	  .InSingletonScope(); //make it singleton
 
 #### 2.3. implement a Hanlder
     public class UserCreatedEventHandler:IHandler<UserCreatedEvent>

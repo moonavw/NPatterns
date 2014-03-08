@@ -1,23 +1,27 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace NPatterns.Messaging
 {
     /// <summary>
-    /// A basic implement of the MessageBus
+    /// implement MessageBus with list of callbacks and support handler factory to get all message handlers
     /// </summary>
     public class MessageBus : IMessageBus
     {
         private readonly List<Delegate> _subscriptions;
+        private readonly Func<Type, IEnumerable<object>> _handlerFactory;
 
         public MessageBus()
         {
             _subscriptions = new List<Delegate>();
+        }
+
+        public MessageBus(Func<Type, IEnumerable<object>> handlerFactory)
+            : this()
+        {
+            _handlerFactory = handlerFactory;
         }
 
         #region IMessageBus Members
@@ -28,18 +32,24 @@ namespace NPatterns.Messaging
             return new Disposer(() => _subscriptions.Remove(callback));
         }
 
-        public virtual void Publish<T>(T message) where T : class
+        public void Publish<T>(T message) where T : class
         {
+            foreach (var handler in GetHandlers<T>())
+                handler.Handle(message);
+
             foreach (var callback in GetCallbacks<T>())
                 callback(message);
         }
 
-        public virtual Task PublishAsync<T>(T message) where T : class
+        public Task PublishAsync<T>(T message) where T : class
         {
-            var tasks = from callback in GetCallbacks<T>()
-                        select Task.Run(() => callback(message));
+            var handlerTasks = from handler in GetHandlers<T>()
+                               select handler.HandleAsync(message);
 
-            return Task.WhenAll(tasks);
+            var callbackTasks = from callback in GetCallbacks<T>()
+                                select Task.Run(() => callback(message));
+
+            return Task.WhenAll(handlerTasks.Concat(callbackTasks));
         }
 
         #endregion
@@ -57,7 +67,16 @@ namespace NPatterns.Messaging
         {
             return from s in _subscriptions
                    where s is Action<T>
-                   select (Action<T>)s;
+                   select (Action<T>) s;
+        }
+
+        private IEnumerable<IHandler<T>> GetHandlers<T>() where T : class
+        {
+            if (_handlerFactory == null)
+                return Enumerable.Empty<IHandler<T>>();
+
+            return from IHandler<T> handler in _handlerFactory(typeof(IHandler<T>))
+                   select handler;
         }
     }
 }

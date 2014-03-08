@@ -14,7 +14,7 @@ namespace NPatterns.Tests
     public class MessageBusTest
     {
         [TestMethod]
-        public void TestMessageBus()
+        public void TestSubscriptionAndCallBack()
         {
             IMessageBus bus = new MessageBus();
 
@@ -37,13 +37,12 @@ namespace NPatterns.Tests
         }
 
         [TestMethod]
-        public void TestMessageBusEx()
+        public void TestHandlerFactory()
         {
             IKernel kernel = new StandardKernel();
 
             //setup handler factory
-            kernel.Bind<Func<Type, IEnumerable<object>>>().ToMethod(ctx => (type) => ctx.Kernel.GetAll(type));
-            kernel.Bind<IMessageBus>().To<MessageBusEx>().InSingletonScope(); //make it singleton
+            kernel.Bind<IMessageBus>().ToConstructor(ctorArg => new MessageBus(type => ctorArg.Context.Kernel.GetAll(type))).InSingletonScope(); //make it singleton
 
             var msg = new TestMessage();
 
@@ -77,8 +76,7 @@ namespace NPatterns.Tests
             IKernel kernel = new StandardKernel();
 
             //setup handler factory
-            kernel.Bind<Func<Type, IEnumerable<object>>>().ToMethod(ctx => (type) => ctx.Kernel.GetAll(type));
-            kernel.Bind<IMessageBus>().To<MessageBusEx>().InSingletonScope(); //make it singleton
+            kernel.Bind<IMessageBus>().ToConstructor(ctorArg => new MessageBus(type => ctorArg.Context.Kernel.GetAll(type))).InSingletonScope(); //make it singleton
 
             var msg = new TestMessage();
 
@@ -104,7 +102,7 @@ namespace NPatterns.Tests
         }
 
         [TestMethod]
-        public void TestPublishAsync()
+        public void TestPublishAsyncWithCallbacksOnly()
         {
             IMessageBus bus = new MessageBus();
 
@@ -132,13 +130,12 @@ namespace NPatterns.Tests
         }
 
         [TestMethod]
-        public void TestExPublishAsync()
+        public void TestPublishAsyncWithHandlersAndCallbacks()
         {
             IKernel kernel = new StandardKernel();
 
             //setup handler factory
-            kernel.Bind<Func<Type, IEnumerable<object>>>().ToMethod(ctx => (type) => ctx.Kernel.GetAll(type));
-            kernel.Bind<IMessageBus>().To<MessageBusEx>().InSingletonScope(); //make it singleton
+            kernel.Bind<IMessageBus>().ToConstructor(ctorArg => new MessageBus(type => ctorArg.Context.Kernel.GetAll(type))).InSingletonScope(); //make it singleton
 
             kernel.Bind<IHandler<TestMessage>>().To<TertiaryTestMessageHandler>();
             kernel.Bind<IHandler<TestMessage>>().To<PrimaryTestMessageHandler>();
