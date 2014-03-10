@@ -2,7 +2,7 @@ using System.Data.Entity;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace NPatterns.ObjectRelational.EntityFramework
+namespace NPatterns.ObjectRelational.EF
 {
     /// <summary>
     /// implement the IRepository with EntityFramework

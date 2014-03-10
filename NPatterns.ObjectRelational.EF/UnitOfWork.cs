@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace NPatterns.ObjectRelational.EntityFramework
+namespace NPatterns.ObjectRelational.EF
 {
     /// <summary>
     /// implement the IUnitOfWork with EntityFramework

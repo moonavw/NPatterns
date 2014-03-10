@@ -21,7 +21,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NPatterns.ObjectRelational.DynamicQuery", "NPatterns.ObjectRelational.DynamicQuery\NPatterns.ObjectRelational.DynamicQuery.csproj", "{35D177FE-87A5-4776-8FC4-676B841B697D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NPatterns.ObjectRelational.EntityFramework", "NPatterns.ObjectRelational.EntityFramework\NPatterns.ObjectRelational.EntityFramework.csproj", "{935E7A2C-AF4A-433A-A8D4-8410F88C3D74}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NPatterns.ObjectRelational.EF", "NPatterns.ObjectRelational.EF\NPatterns.ObjectRelational.EF.csproj", "{935E7A2C-AF4A-433A-A8D4-8410F88C3D74}"
 EndProject
 Global
 	GlobalSection(TestCaseManagementSettings) = postSolution
