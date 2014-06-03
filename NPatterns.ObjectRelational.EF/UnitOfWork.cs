@@ -72,12 +72,12 @@ namespace NPatterns.ObjectRelational.EF
 
             toAdd.ForEach(z =>
             {
-                ((IAuditable) z.Entity).Created = DateTime.Now;
-                ((IAuditable) z.Entity).CreatedBy = Thread.CurrentPrincipal.Identity.Name;
+                ((IAuditable)z.Entity).Created = DateTime.Now;
+                ((IAuditable)z.Entity).CreatedBy = Thread.CurrentPrincipal.Identity.Name;
 
                 //readonly for updated audit
-                ((IAuditable) z.Entity).Updated = null;
-                ((IAuditable) z.Entity).UpdatedBy = null;
+                ((IAuditable)z.Entity).Updated = null;
+                ((IAuditable)z.Entity).UpdatedBy = null;
             });
 
             var toUpdate = (from e in Context.ChangeTracker.Entries()
@@ -90,8 +90,18 @@ namespace NPatterns.ObjectRelational.EF
                 z.Property("Created").IsModified = false;
                 z.Property("CreatedBy").IsModified = false;
 
-                ((IAuditable) z.Entity).Updated = DateTime.Now;
-                ((IAuditable) z.Entity).UpdatedBy = Thread.CurrentPrincipal.Identity.Name;
+                ((IAuditable)z.Entity).Updated = DateTime.Now;
+                ((IAuditable)z.Entity).UpdatedBy = Thread.CurrentPrincipal.Identity.Name;
+            });
+
+            var toUndel = (from e in Context.ChangeTracker.Entries()
+                           where e.State == EntityState.Modified && e.Entity is IArchivable
+                           select e).ToList();
+
+            toUndel.ForEach(z =>
+            {
+                ((IArchivable)z.Entity).Deleted = null;
+                ((IArchivable)z.Entity).DeletedBy = null;
             });
 
             var toDel = (from e in Context.ChangeTracker.Entries()
@@ -101,8 +111,8 @@ namespace NPatterns.ObjectRelational.EF
             toDel.ForEach(z =>
             {
                 z.State = EntityState.Modified;
-                ((IArchivable) z.Entity).Deleted = DateTime.Now;
-                ((IArchivable) z.Entity).DeletedBy = Thread.CurrentPrincipal.Identity.Name;
+                ((IArchivable)z.Entity).Deleted = DateTime.Now;
+                ((IArchivable)z.Entity).DeletedBy = Thread.CurrentPrincipal.Identity.Name;
                 if (z.Entity is IAuditable)
                 {
                     //readonly for audit
