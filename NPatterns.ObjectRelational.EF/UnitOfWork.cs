@@ -94,16 +94,6 @@ namespace NPatterns.ObjectRelational.EF
                 ((IAuditable)z.Entity).UpdatedBy = Thread.CurrentPrincipal.Identity.Name;
             });
 
-            var toUndel = (from e in Context.ChangeTracker.Entries()
-                           where e.State == EntityState.Modified && e.Entity is IArchivable
-                           select e).ToList();
-
-            toUndel.ForEach(z =>
-            {
-                ((IArchivable)z.Entity).Deleted = null;
-                ((IArchivable)z.Entity).DeletedBy = null;
-            });
-
             var toDel = (from e in Context.ChangeTracker.Entries()
                          where e.State == EntityState.Deleted && e.Entity is IArchivable
                          select e).ToList();
@@ -111,8 +101,7 @@ namespace NPatterns.ObjectRelational.EF
             toDel.ForEach(z =>
             {
                 z.State = EntityState.Modified;
-                ((IArchivable)z.Entity).Deleted = DateTime.Now;
-                ((IArchivable)z.Entity).DeletedBy = Thread.CurrentPrincipal.Identity.Name;
+                ((IArchivable)z.Entity).Archive();
                 if (z.Entity is IAuditable)
                 {
                     //readonly for audit
@@ -122,6 +111,26 @@ namespace NPatterns.ObjectRelational.EF
                     z.Property("UpdatedBy").IsModified = false;
                 }
             });
+        }
+
+        public void MarkNew<TEntity>(TEntity entity) where TEntity : class
+        {
+            Context.Entry(entity).State = EntityState.Added;
+        }
+
+        public void MarkUnchanged<TEntity>(TEntity entity) where TEntity : class
+        {
+            Context.Entry(entity).State = EntityState.Unchanged;
+        }
+
+        public void MarkModified<TEntity>(TEntity entity) where TEntity : class
+        {
+            Context.Entry(entity).State = EntityState.Modified;
+        }
+
+        public void MarkDeleted<TEntity>(TEntity entity) where TEntity : class
+        {
+            Context.Entry(entity).State = EntityState.Deleted;
         }
 
         #endregion

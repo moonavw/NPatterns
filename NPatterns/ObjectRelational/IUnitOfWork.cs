@@ -37,5 +37,25 @@ namespace NPatterns.ObjectRelational
         /// Rollback tracked changes. See references of UnitOfWork pattern
         /// </summary>
         void Rollback();
+
+        /// <summary>
+        /// Mark entity as new Added
+        /// </summary>
+        void MarkNew<TEntity>(TEntity entity) where TEntity : class;
+
+        /// <summary>
+        /// Mark entity as Unchanged
+        /// </summary>
+        void MarkUnchanged<TEntity>(TEntity entity) where TEntity : class;
+
+        /// <summary>
+        /// Mark entity as Modified
+        /// </summary>
+        void MarkModified<TEntity>(TEntity entity) where TEntity : class;
+
+        /// <summary>
+        /// Mark entity as Deleted
+        /// </summary>
+        void MarkDeleted<TEntity>(TEntity entity) where TEntity : class;
     }
 }
